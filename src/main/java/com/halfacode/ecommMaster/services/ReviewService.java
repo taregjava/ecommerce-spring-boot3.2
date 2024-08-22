@@ -1,5 +1,6 @@
 package com.halfacode.ecommMaster.services;
 
+import com.halfacode.ecommMaster.dto.ProductDTO;
 import com.halfacode.ecommMaster.models.Product;
 import com.halfacode.ecommMaster.models.Review;
 import com.halfacode.ecommMaster.models.User;
@@ -28,7 +29,7 @@ public class ReviewService {
     }
 
     public List<Review> getReviewsByProduct(Long productId) {
-        Product product = productService.getProductById(productId);
+        ProductDTO product = productService.getProductById(productId);
         return reviewRepository.findByProduct(product);
     }
 }

@@ -1,5 +1,6 @@
 package com.halfacode.ecommMaster.services;
 
+import com.halfacode.ecommMaster.dto.ProductDTO;
 import com.halfacode.ecommMaster.models.Product;
 import com.halfacode.ecommMaster.models.ShoppingCart;
 import com.halfacode.ecommMaster.models.User;
@@ -22,10 +23,10 @@ public class ShoppingCartService {
 
     public ShoppingCart addToCart(User user, Long productId, int quantity) {
         ShoppingCart cart = getCartByUser(user);
-        Product product = productService.getProductById(productId);
+        ProductDTO product = productService.getProductById(productId);
               //  .orElseThrow(() -> new RuntimeException("Product not found"));
 
-        cart.addItem(product, quantity);
+        //cart.addItem(product, quantity);
         return cartRepository.save(cart);
     }
 

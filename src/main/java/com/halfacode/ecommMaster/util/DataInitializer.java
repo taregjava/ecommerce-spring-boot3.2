@@ -150,6 +150,8 @@ public class DataInitializer {
 
             // Save products to the database
             productRepository.saveAll(products);
+
+
         };
     }
 }

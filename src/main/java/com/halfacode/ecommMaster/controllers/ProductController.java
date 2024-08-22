@@ -1,13 +1,16 @@
 package com.halfacode.ecommMaster.controllers;
 
-import com.halfacode.ecommMaster.models.Product;
+import com.halfacode.ecommMaster.dto.ProductDTO;
 import com.halfacode.ecommMaster.services.ProductService;
+import com.halfacode.ecommMaster.mapper.ProductMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/products")
@@ -17,25 +20,26 @@ public class ProductController {
     private ProductService productService;
 
     @GetMapping
-    public List<Product> getAllProducts() {
+    public List<ProductDTO> getAllProducts() {
         return productService.getAllProducts();
+
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<Product> getProductById(@PathVariable Long id) {
-        Optional<Product> product = Optional.ofNullable(productService.getProductById(id));
-        return product.map(ResponseEntity::ok).orElseGet(() -> ResponseEntity.notFound().build());
+    public ResponseEntity<ProductDTO> getProductById(@PathVariable Long id) {
+        Optional<ProductDTO> productDTO = Optional.ofNullable(productService.getProductById(id));
+        return productDTO.map(ResponseEntity::ok).orElseGet(() -> ResponseEntity.notFound().build());
     }
 
     @PostMapping
-    public Product addProduct(@RequestBody Product product) {
-        return productService.addProduct(product);
+    public ProductDTO addProduct(@RequestBody ProductDTO productDTO) {
+        return productService.addProduct(productDTO);
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<Product> updateProduct(@PathVariable Long id, @RequestBody Product updatedProduct) {
+    public ResponseEntity<ProductDTO> updateProduct(@PathVariable Long id, @RequestBody ProductDTO updatedProductDTO) {
         try {
-            return ResponseEntity.ok(productService.updateProduct(id, updatedProduct));
+            return ResponseEntity.ok(productService.updateProduct(id, updatedProductDTO));
         } catch (RuntimeException e) {
             return ResponseEntity.notFound().build();
         }

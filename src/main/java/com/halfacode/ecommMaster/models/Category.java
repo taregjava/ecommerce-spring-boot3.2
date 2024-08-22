@@ -2,6 +2,7 @@ package com.halfacode.ecommMaster.models;
 
 import jakarta.persistence.*;
 import lombok.Data;
+import lombok.ToString;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -17,12 +18,20 @@ public class Category {
 
     private String description;
 
-    @OneToMany(mappedBy = "category", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<Product> products = new ArrayList<>();
+    @OneToMany(mappedBy = "category")
+    @ToString.Exclude
+    private List<Product> products;
 
+    public Category(){
+
+    }
     public Category(String name, String description) {
         this.name = name;
         this.description = description;
     }
-// Add any additional fields or methods if necessary
+    @Override
+    public String toString() {
+        return "Category{id=" + id + ", name='" + name + "'}";
+    }
+
 }

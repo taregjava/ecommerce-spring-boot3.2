@@ -1,5 +1,6 @@
 package com.halfacode.ecommMaster.dashboard;
 
+import com.halfacode.ecommMaster.dto.ProductDTO;
 import com.halfacode.ecommMaster.models.Order;
 import com.halfacode.ecommMaster.models.Product;
 import com.halfacode.ecommMaster.models.User;
@@ -23,7 +24,7 @@ public class AdminDashboardService {
     @Autowired
     private UserService userService;
 
-    public List<Product> getAllProducts() {
+    public List<ProductDTO> getAllProducts() {
         return productService.getAllProducts();
     }
 

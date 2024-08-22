@@ -21,4 +21,8 @@ public interface ProductRepository extends JpaRepository<Product, Long> {
                                @Param("category") Category category,
                                @Param("minPrice") Double minPrice,
                                @Param("maxPrice") Double maxPrice);
+
+    @Query("SELECT p FROM Product p JOIN FETCH p.category")
+    List<Product> findAllWithCategory();
+
 }
