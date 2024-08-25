@@ -28,8 +28,12 @@ public class Discount {
 
     public boolean isActive() {
         LocalDate now = LocalDate.now();
+        if (startDate == null || endDate == null) {
+            return false; // or handle appropriately
+        }
         return now.isAfter(startDate) && now.isBefore(endDate);
     }
+
 
     @Override
     public final boolean equals(Object o) {

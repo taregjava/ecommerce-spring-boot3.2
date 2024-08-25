@@ -23,7 +23,7 @@ public class ProductService {
         List<Product> products = productRepository.findAll();
         return products.stream()
                 .map(product -> {
-                    ProductDTO dto = ProductMapper.toProductDTO(product);
+                    ProductDTO dto = ProductMapper.toDTO(product);
                     // Handle null category
                     if (dto.getCategory() == null) {
                         dto.setCategory(new CategoryDTO(0L, "Uncategorized", ""));
@@ -35,13 +35,13 @@ public class ProductService {
 
     public ProductDTO getProductById(Long id) {
         return productRepository.findById(id)
-                .map(ProductMapper::toProductDTO)
+                .map(ProductMapper::toDTO)
                 .orElse(null);
     }
 
     public ProductDTO addProduct(ProductDTO productDTO) {
-        Product product = ProductMapper.toProduct(productDTO);
-        return ProductMapper.toProductDTO(productRepository.save(product));
+        Product product = ProductMapper.toEntity(productDTO);
+        return ProductMapper.toDTO(productRepository.save(product));
     }
 
     public ProductDTO updateProduct(Long id, ProductDTO updatedProductDTO) {
@@ -54,14 +54,13 @@ public class ProductService {
                     product.setIsAvailable(updatedProductDTO.getIsAvailable());
 
                     // Convert CategoryDTO to Category and set it
-                    Category category = CategoryMapper.toCategory(updatedProductDTO.getCategory());
+                    Category category = CategoryMapper.toEntity(updatedProductDTO.getCategory());
                     product.setCategory(category);
 
-                    return ProductMapper.toProductDTO(productRepository.save(product));
+                    return ProductMapper.toDTO(productRepository.save(product));
                 })
                 .orElseThrow(() -> new RuntimeException("Product not found"));
     }
-
 
     public void deleteProduct(Long id) {
         productRepository.deleteById(id);
@@ -72,5 +71,10 @@ public class ProductService {
                 .orElseThrow(() -> new RuntimeException("Product not found"));
         product.setStockQuantity(product.getStockQuantity() - quantity);
         productRepository.save(product);
+    }
+
+    public Product getProductEntityById(Long id) {
+        return productRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Product not found"));
     }
 }

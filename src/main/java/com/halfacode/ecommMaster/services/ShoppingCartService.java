@@ -18,17 +18,24 @@ public class ShoppingCartService {
     private ProductService productService;
 
     public ShoppingCart getCartByUser(User user) {
-        return cartRepository.findByUser(user).orElse(new ShoppingCart());
+        return cartRepository.findByUser(user).orElseGet(() -> {
+            ShoppingCart newCart = new ShoppingCart();
+            newCart.setUser(user); // Set the user for the new cart
+            return newCart;
+        });
     }
 
     public ShoppingCart addToCart(User user, Long productId, int quantity) {
-        ShoppingCart cart = getCartByUser(user);
-        ProductDTO product = productService.getProductById(productId);
-              //  .orElseThrow(() -> new RuntimeException("Product not found"));
-
-        //cart.addItem(product, quantity);
-        return cartRepository.save(cart);
+        ShoppingCart cart = getCartByUser(user);  // Fetch or create a cart for the user
+        Product product = productService.getProductEntityById(productId);  // Fetch the product
+        cart.addItem(product, quantity);  // Add the product to the cart
+        ShoppingCart updatedCart = cartRepository.save(cart);  // Save the updated cart
+        System.out.println("Saved Cart Total Price: " + updatedCart.getTotalPrice());
+        return updatedCart;
     }
+
+
+
 
     public ShoppingCart removeFromCart(User user, Long productId) {
         ShoppingCart cart = getCartByUser(user);

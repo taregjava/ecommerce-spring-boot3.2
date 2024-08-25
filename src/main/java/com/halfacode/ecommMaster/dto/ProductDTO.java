@@ -2,10 +2,12 @@ package com.halfacode.ecommMaster.dto;
 
 
 
+import lombok.Builder;
 import lombok.Data;
 import java.util.List;
 
 @Data
+@Builder
 public class ProductDTO {
     private Long id;
     private String name;

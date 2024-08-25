@@ -14,12 +14,11 @@ public class CategoryMapper {
             return null;
         }
 
-        CategoryDTO categoryDTO = new CategoryDTO();
-        categoryDTO.setId(category.getId());
-        categoryDTO.setName(category.getName());
-        categoryDTO.setDescription(category.getDescription());
-
-        return categoryDTO;
+        return CategoryDTO.builder()
+                .id(category.getId())
+                .name(category.getName())
+                .description(category.getDescription())
+                .build();
     }
 
     public static Category toCategory(CategoryDTO categoryDTO) {
@@ -27,11 +26,22 @@ public class CategoryMapper {
             return null;
         }
 
-        Category category = new Category();
-        category.setId(categoryDTO.getId());
-        category.setName(categoryDTO.getName());
-        category.setDescription(categoryDTO.getDescription());
+        return Category.builder()
+                .id(categoryDTO.getId())
+                .name(categoryDTO.getName())
+                .description(categoryDTO.getDescription())
+                .build();
+    }
 
-        return category;
+    public static Category toEntity(CategoryDTO categoryDTO) {
+        if (categoryDTO == null) {
+            return null;
+        }
+
+        return Category.builder()
+                .id(categoryDTO.getId())
+                .name(categoryDTO.getName())
+                .description(categoryDTO.getDescription())
+                .build();
     }
 }

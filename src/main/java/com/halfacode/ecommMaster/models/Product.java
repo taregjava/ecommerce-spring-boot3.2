@@ -1,19 +1,20 @@
 package com.halfacode.ecommMaster.models;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import lombok.ToString;
 
 import java.util.ArrayList;
 import java.util.List;
 
-
-
-
 @Entity
 @Data
+@AllArgsConstructor
 @NoArgsConstructor
+@Builder
 public class Product {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -27,17 +28,16 @@ public class Product {
     private double basePrice;
     private int salesCount;
 
-    // Change FetchType to LAZY for ManyToOne relationship
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "category_id")
-    @ToString.Exclude
+    @JsonIgnore // Avoid circular reference
     private Category category;
 
-    // Set OneToMany to LAZY as well
     @OneToMany(mappedBy = "product", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
+    @JsonIgnore // Avoid circular reference
     private List<Review> reviews = new ArrayList<>();
 
-    @Transient // Mark as transient because it’s not a database column
+    @Transient
     private double averageRating;
 
     public Product(String name, String description, Double price, Integer stockQuantity, Boolean isAvailable, Category category) {
@@ -77,9 +77,14 @@ public class Product {
             return 10; // Low demand
         }
     }
-    @Override
-    public String toString() {
-        return "Product{id=" + id + ", name='" + name + "', price=" + price + "}";
+
+    public void addReview(Review review) {
+        reviews.add(review);
+        review.setProduct(this);
     }
 
+    public void removeReview(Review review) {
+        reviews.remove(review);
+        review.setProduct(null);
+    }
 }

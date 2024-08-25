@@ -1,9 +1,11 @@
 package com.halfacode.ecommMaster.models;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.Data;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 
 @Data
@@ -18,8 +20,10 @@ public class Order {
     private Double totalAmount;
     private String status; // e.g., "Pending", "Processing", "Shipped", "Delivered"
 
-    @OneToMany(cascade = CascadeType.ALL)
-    private List<CartItem> items;
+    @OneToMany(mappedBy = "order", cascade = CascadeType.ALL, orphanRemoval = true)
+    @JsonIgnore
+    private List<CartItem> items = new ArrayList<>();
+
 
     @ManyToOne
     @JoinColumn(name = "user_id", nullable = false)
@@ -30,5 +34,21 @@ public class Order {
 
     public void updateStatus(String newStatus) {
         this.status = newStatus;
+    }
+
+    public void addItem(CartItem item) {
+        if (item.getOrder() != null && item.getOrder() != this) {
+            throw new IllegalArgumentException("CartItem is already associated with another Order");
+        }
+        items.add(item);
+        item.setOrder(this);
+    }
+
+    public void removeItem(CartItem item) {
+        if (items.remove(item)) {
+            item.setOrder(null);
+        } else {
+            throw new IllegalArgumentException("CartItem not found in this Order");
+        }
     }
 }

@@ -36,12 +36,15 @@ public class CustomUserDetails implements UserDetails {
     }
 
     public String getName() {
-        // Assuming you want to return username or some other field as name
         return user.getUsername();
     }
 
     public Set<Role> getRoles() {
         return user.getRoles();
+    }
+
+    public User getUser() {
+        return user;
     }
 
     @Override
@@ -51,7 +54,8 @@ public class CustomUserDetails implements UserDetails {
 
     @Override
     public boolean isAccountNonLocked() {
-        return true;
+        // Return the actual accountNonLocked status from the user object
+        return user.isAccountNonLocked();
     }
 
     @Override

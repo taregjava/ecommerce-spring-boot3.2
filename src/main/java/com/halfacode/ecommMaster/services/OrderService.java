@@ -1,5 +1,6 @@
 package com.halfacode.ecommMaster.services;
 
+import com.halfacode.ecommMaster.errors.CustomPaymentException;
 import com.halfacode.ecommMaster.models.CartItem;
 import com.halfacode.ecommMaster.models.Discount;
 import com.halfacode.ecommMaster.models.Order;
@@ -7,6 +8,7 @@ import com.halfacode.ecommMaster.models.User;
 import com.halfacode.ecommMaster.repositories.OrderRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -31,44 +33,77 @@ public class OrderService {
         this.shoppingCartService = shoppingCartService;
     }
 
+    @Transactional
     public Order placeOrder(List<CartItem> cartItems, String discountCode, User user) {
-        // Validate and apply discount
-        double discountPercentage = 0;
-        if (discountCode != null && !discountCode.isEmpty()) {
-            Discount discount = discountService.getDiscountByCode(discountCode);
-            if (discount != null && discount.isActive()) {
-                discountPercentage = discount.getPercentage();
-            } else {
-                throw new IllegalArgumentException("Invalid or expired discount code");
+        try {
+            // Validate and apply discount
+            double discountPercentage = 0;
+            if (discountCode != null && !discountCode.isEmpty()) {
+                Discount discount = discountService.getDiscountByCode(discountCode);
+                if (discount != null && discount.isActive()) {
+                    discountPercentage = discount.getPercentage();
+                } else {
+                    throw new IllegalArgumentException("Invalid or expired discount code");
+                }
             }
+
+            // Calculate total amount with discount
+            double totalAmount = cartItems.stream()
+                    .mapToDouble(CartItem::getTotalPrice)
+                    .sum();
+            double discountedAmount = totalAmount * (1 - discountPercentage / 100);
+
+            // Log the amounts
+            System.out.println("Total Amount: " + totalAmount);
+            System.out.println("Discounted Amount: " + discountedAmount);
+
+            // Simulate payment processing
+            boolean paymentSuccessful = paymentService.processPayment(user, discountedAmount, "CREDIT_CARD");
+            if (!paymentSuccessful) {
+                throw new CustomPaymentException("Payment failed for user: " + user.getUsername());
+            }
+
+            // Reduce stock
+            for (CartItem item : cartItems) {
+                productService.updateStock(item.getProduct().getId(), item.getQuantity());
+                // Log stock update
+                System.out.println("Updated stock for product ID: " + item.getProduct().getId());
+            }
+
+            // Create and save order
+            Order order = new Order();
+            order.setOrderDate(LocalDateTime.now());
+            order.setItems(cartItems);
+            order.setTotalAmount(discountedAmount);
+            order.setUser(user);
+            Order savedOrder = orderRepository.save(order);
+
+            // Log order details
+            System.out.println("Saved Order ID: " + savedOrder.getId());
+
+            // Clear cart after order is placed
+            shoppingCartService.clearCart(user);
+            System.out.println("Cart cleared for user: " + user.getUsername());
+
+            return savedOrder;
+
+        } catch (IllegalArgumentException e) {
+            // Handle invalid discount code
+            System.err.println("Invalid discount code: " + e.getMessage());
+            throw new RuntimeException("Order placement failed due to invalid discount: " + e.getMessage(), e);
+        } catch (CustomPaymentException e) {
+            // Handle payment failure specifically
+            System.err.println("Payment error: " + e.getMessage());
+            throw new CustomPaymentException("Order placement failed due to payment failure: " + e.getMessage(), e);
+        } catch (Exception e) {
+            // Handle any other unforeseen errors
+            System.err.println("Unexpected error: " + e.getMessage());
+            throw new RuntimeException("An unexpected error occurred while placing the order: " + e.getMessage(), e);
         }
-
-        // Calculate total amount with discount
-        double totalAmount = cartItems.stream()
-                .mapToDouble(CartItem::getTotalPrice)
-                .sum();
-        double discountedAmount = totalAmount * (1 - discountPercentage / 100);
-
-        // Simulate payment processing
-        boolean paymentSuccessful = paymentService.processPayment(user, discountedAmount, "cash");
-        if (!paymentSuccessful) {
-            throw new IllegalStateException("Payment failed for user: " + user.getUsername());
-        }
-
-        // Reduce stock and save order
-        for (CartItem item : cartItems) {
-            productService.updateStock(item.getProduct().getId(), item.getQuantity());
-        }
-
-        // Create and save order
-        Order order = new Order();
-        order.setOrderDate(LocalDateTime.now());
-        order.setItems(cartItems);
-        order.setTotalAmount(discountedAmount);
-        order.setUser(user);
-
-        return orderRepository.save(order);
     }
+
+
+
 
     public Order updateOrderStatus(Long orderId, String status) {
         Order order = orderRepository.findById(orderId)

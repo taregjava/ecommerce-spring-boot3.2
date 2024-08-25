@@ -1,10 +1,9 @@
 package com.halfacode.ecommMaster.mapper;
 
-import com.halfacode.ecommMaster.dto.ProductDTO;
-import com.halfacode.ecommMaster.models.Product;
 import com.halfacode.ecommMaster.dto.CategoryDTO;
+import com.halfacode.ecommMaster.dto.ProductDTO;
 import com.halfacode.ecommMaster.models.Category;
-
+import com.halfacode.ecommMaster.models.Product;
 
 public class ProductMapper {
 
@@ -12,36 +11,27 @@ public class ProductMapper {
         // Private constructor to prevent instantiation
     }
 
-    public static ProductDTO toProductDTO(Product product) {
+    public static ProductDTO toDTO(Product product) {
         if (product == null) {
             return null;
         }
 
-        ProductDTO productDTO = new ProductDTO();
-        productDTO.setId(product.getId());
-        productDTO.setName(product.getName());
-        productDTO.setDescription(product.getDescription());
-        productDTO.setPrice(product.getPrice());
-        productDTO.setStockQuantity(product.getStockQuantity());
-        productDTO.setIsAvailable(product.getIsAvailable());
-        productDTO.setAverageRating(product.getAverageRating());
-        productDTO.setBasePrice(product.getBasePrice());
-        productDTO.setSalesCount(product.getSalesCount());
-
-        // Convert Category to CategoryDTO
-        Category category = product.getCategory();
-        if (category != null) {
-            CategoryDTO categoryDTO = new CategoryDTO(category.getName(), category.getDescription());
-            productDTO.setCategory(categoryDTO);
-        }
-
-        // Assuming you have a method to map List<Review> to List<ReviewDTO>
-       // productDTO.setReviews(ReviewMapper.toReviewDTOs(product.getReviews()));
-
-        return productDTO;
+        return ProductDTO.builder()
+                .id(product.getId())
+                .name(product.getName())
+                .description(product.getDescription())
+                .price(product.getPrice())
+                .stockQuantity(product.getStockQuantity())
+                .isAvailable(product.getIsAvailable())
+                .averageRating(product.getAverageRating())
+                .basePrice(product.getBasePrice())
+                .salesCount(product.getSalesCount())
+                .category(product.getCategory() != null ?
+                        new CategoryDTO(product.getCategory().getName(), product.getCategory().getDescription()) : null)
+                .build();
     }
 
-    public static Product toProduct(ProductDTO productDTO) {
+    public static Product toEntity(ProductDTO productDTO) {
         if (productDTO == null) {
             return null;
         }
@@ -56,15 +46,11 @@ public class ProductMapper {
         product.setBasePrice(productDTO.getBasePrice());
         product.setSalesCount(productDTO.getSalesCount());
 
-        // Convert CategoryDTO to Category
         CategoryDTO categoryDTO = productDTO.getCategory();
         if (categoryDTO != null) {
             Category category = new Category(categoryDTO.getName(), categoryDTO.getDescription());
             product.setCategory(category);
         }
-
-        // Assuming you have a method to map List<ReviewDTO> to List<Review>
-      //  product.setReviews(ReviewMapper.toReviews(productDTO.getReviews()));
 
         return product;
     }

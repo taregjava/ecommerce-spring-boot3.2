@@ -1,18 +1,19 @@
 package com.halfacode.ecommMaster.util;
 
-import com.halfacode.ecommMaster.models.Category;
-import com.halfacode.ecommMaster.models.Product;
-import com.halfacode.ecommMaster.models.Role;
-import com.halfacode.ecommMaster.repositories.CategoryRepository;
-import com.halfacode.ecommMaster.repositories.ProductRepository;
-import com.halfacode.ecommMaster.repositories.RoleRepository;
+import com.halfacode.ecommMaster.models.*;
+import com.halfacode.ecommMaster.repositories.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.security.crypto.password.PasswordEncoder;
 
+import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 @Configuration
 public class DataInitializer {
@@ -24,7 +25,14 @@ public class DataInitializer {
     private ProductRepository productRepository;
     @Autowired
     private RoleRepository roleRepository; // Add RoleRepository
-
+    @Autowired
+    private UserRepository userRepository;
+    @Autowired
+    private ReviewRepository reviewRepository;
+    @Autowired
+    private DiscountRepository discountRepository;
+    @Autowired
+    private PasswordEncoder passwordEncoder;
     @Bean
     public CommandLineRunner initializeData() {
         return args -> {
@@ -33,9 +41,50 @@ public class DataInitializer {
                     new Role("ROLE_USER"),
                     new Role("ROLE_ADMIN")
             );
-
+            if (roleRepository.count() == 0) {
+                roleRepository.saveAll(roles);
+            }
             // Save roles to the database
             roleRepository.saveAll(roles);
+
+            // Create users and assign roles
+            User adminUser = new User();
+            adminUser.setUsername("admin");
+           // adminUser.setPassword("admin123");  // In a real app, hash the password
+            adminUser.setEnabled(true);
+            adminUser.setAccountNonLocked(true);
+            adminUser.setRoles(new HashSet<>(Set.of(roles.get(1)))); // Assign ROLE_ADMIN
+            adminUser.setPassword(passwordEncoder.encode("admin123"));
+
+            User regularUser = new User();
+            regularUser.setUsername("user");
+            //regularUser.setPassword("user123");  // In a real app, hash the password
+            regularUser.setEnabled(true);
+            regularUser.setAccountNonLocked(true);
+            regularUser.setRoles(new HashSet<>(Set.of(roles.get(0)))); // Assign ROLE_USER
+            regularUser.setPassword(passwordEncoder.encode("user123"));
+
+            if (userRepository.count() == 0) {
+                userRepository.save(adminUser);
+                userRepository.save(regularUser);
+            }
+// Initialize discounts
+            Discount discount1 = new Discount();
+            discount1.setCode("SUMMER2024");
+            discount1.setPercentage(10.0);
+            discount1.setStartDate(LocalDate.of(2024, 6, 1));
+            discount1.setEndDate(LocalDate.of(2024, 8, 31));
+
+            Discount discount2 = new Discount();
+            discount2.setCode("WINTER2024");
+            discount2.setPercentage(15.0);
+            discount2.setStartDate(LocalDate.of(2024, 12, 1));
+            discount2.setEndDate(LocalDate.of(2025, 2, 28));
+
+            if (discountRepository.count() == 0) {
+                discountRepository.save(discount1);
+                discountRepository.save(discount2);
+            }
             // Define categories
             List<Category> categories = List.of(
                     new Category("Electronics", "Devices and gadgets"),
@@ -116,7 +165,9 @@ public class DataInitializer {
                     new Category("Kids", "Products for children"),
                     new Category("Eco-Friendly", "Eco-friendly and sustainable products")
             );
-
+            if (categoryRepository.count() == 0) {
+                categoryRepository.saveAll(categories);
+            }
             // Save categories to the database
             categoryRepository.saveAll(categories);
 
@@ -150,8 +201,23 @@ public class DataInitializer {
 
             // Save products to the database
             productRepository.saveAll(products);
+            List<Product> products2 = productRepository.findAll();
+            List<User> users = userRepository.findAll();
+            if (!users.isEmpty() && !products.isEmpty()) {
+                List<Review> reviews = List.of(
+                        new Review(users.get(0), products.get(0), 5, "Excellent smartphone!", LocalDateTime.now()),
+                        new Review(users.get(1), products.get(1), 4, "Great laptop but a bit expensive.", LocalDateTime.now())
+                );
 
+                reviews.forEach(review -> {
+                    review.getProduct().addReview(review); // Add review to product
+                    reviewRepository.save(review);
+                });
+            } else {
+                System.out.println("No users or products found.");
+            }
 
         };
-    }
+    };
+
 }

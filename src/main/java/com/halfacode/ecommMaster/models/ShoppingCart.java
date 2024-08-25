@@ -22,15 +22,33 @@ public class ShoppingCart {
 
     // Add, remove, clear items
     public void addItem(Product product, int quantity) {
-        // Check if the product already exists in the cart
+        boolean updated = false;
         for (CartItem item : items) {
             if (item.getProduct().getId().equals(product.getId())) {
                 item.setQuantity(item.getQuantity() + quantity);
-                return;
+                updated = true;
+                System.out.println("Updated Item: " + item.getProduct().getName() + " Quantity: " + item.getQuantity());
+                System.out.println("Updated Total Price: " + item.getTotalPrice());
+                break;
             }
         }
-        items.add(new CartItem(product, quantity));
+        if (!updated) {
+            CartItem newItem = new CartItem(product, quantity);
+            items.add(newItem);
+            System.out.println("Added New Item: " + product.getName() + " Quantity: " + quantity);
+            System.out.println("Total Price: " + newItem.getTotalPrice());
+        }
+        System.out.println("Cart Total Price Before Save: " + getTotalPrice());
     }
+
+    public double getTotalPrice() {
+        double total = items.stream()
+                .mapToDouble(CartItem::getTotalPrice)
+                .sum();
+        System.out.println("Cart Total Price Calculated: " + total);
+        return total;
+    }
+
 
     public void removeItem(Long productId) {
         items.removeIf(item -> item.getProduct().getId().equals(productId));
@@ -40,9 +58,11 @@ public class ShoppingCart {
         items.clear();
     }
 
-    public double getTotalPrice() {
-        return items.stream()
+   /* public double getTotalPrice() {
+        double total = items.stream()
                 .mapToDouble(CartItem::getTotalPrice)
                 .sum();
-    }
+        System.out.println("Cart Total Price: " + total);
+        return total;
+    }*/
 }

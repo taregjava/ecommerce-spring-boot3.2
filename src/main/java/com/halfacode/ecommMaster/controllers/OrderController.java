@@ -1,13 +1,16 @@
 package com.halfacode.ecommMaster.controllers;
 
+import com.halfacode.ecommMaster.errors.CustomPaymentException;
 import com.halfacode.ecommMaster.models.CartItem;
 import com.halfacode.ecommMaster.models.Order;
+import com.halfacode.ecommMaster.models.ShoppingCart;
 import com.halfacode.ecommMaster.models.User;
 
 import com.halfacode.ecommMaster.services.OrderService;
 import com.halfacode.ecommMaster.services.ShoppingCartService;
 import com.halfacode.ecommMaster.services.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -30,17 +33,27 @@ public class OrderController {
 
     // Endpoint to place an order
     @PostMapping("/place")
-    public ResponseEntity<Order> placeOrder(@RequestParam String discountCode, @RequestParam Long userId) {
-        User user = userService.getUserById(userId);
-        List<CartItem> cartItems = (List<CartItem>) shoppingCartService.getCartByUser(user);
+    public ResponseEntity<?> placeOrder(@RequestParam String discountCode, @RequestParam Long userId) {
+        try {
+            User user = userService.getUserById(userId);
+            ShoppingCart shoppingCart = shoppingCartService.getCartByUser(user);
+            List<CartItem> cartItems = shoppingCart.getItems();
 
-        if (cartItems.isEmpty()) {
-            return ResponseEntity.badRequest().body(null);
+            if (cartItems.isEmpty()) {
+                return ResponseEntity.badRequest().body("Cart is empty.");
+            }
+
+            Order order = orderService.placeOrder(cartItems, discountCode, user);
+            return ResponseEntity.ok(order);
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        } catch (CustomPaymentException e) {
+            return ResponseEntity.status(HttpStatus.PAYMENT_REQUIRED).body(e.getMessage());
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("An error occurred while placing the order.");
         }
-
-        Order order = orderService.placeOrder(cartItems, discountCode, user);
-        return ResponseEntity.ok(order);
     }
+
 
     // Endpoint to update the order status
     @PutMapping("/{orderId}/status")

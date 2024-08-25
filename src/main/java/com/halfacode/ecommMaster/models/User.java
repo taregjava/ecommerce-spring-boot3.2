@@ -15,6 +15,7 @@ public class User {
     private String username;
     private String password; // In a real application, passwords should be hashed
     private boolean enabled;
+    private boolean accountNonLocked;
 
     @ManyToMany(fetch = FetchType.EAGER)
     @JoinTable(
