@@ -12,6 +12,7 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.function.Function;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -21,26 +22,34 @@ public class JwtUtil {
 
     // Generate a secure key for HS512
     private static final SecretKey SECRET_KEY = Keys.secretKeyFor(SignatureAlgorithm.HS512);
-    private static final int TOKEN_VALIDITY = 3600 * 5;
+    private static final SecretKey REFRESH_SECRET_KEY = Keys.secretKeyFor(SignatureAlgorithm.HS512);
+    private static final int TOKEN_VALIDITY = 3600 * 5; // 5 hours
+    private static final int REFRESH_TOKEN_VALIDITY = 3600 * 24 * 7; // 1 week
 
     public String generateToken(UserDetails userDetails) {
         logger.debug("Generating token for user: {}", userDetails.getUsername());
         Map<String, Object> claims = new HashMap<>();
-        return createToken(claims, userDetails.getUsername());
+        return createToken(claims, userDetails.getUsername(), TOKEN_VALIDITY, SECRET_KEY);
     }
-    // New method to generate token with extra claims
+
+    public String generateRefreshToken(UserDetails userDetails) {
+        logger.debug("Generating refresh token for user: {}", userDetails.getUsername());
+        return createToken(new HashMap<>(), userDetails.getUsername(), REFRESH_TOKEN_VALIDITY, REFRESH_SECRET_KEY);
+    }
+
     public String generateToken(UserDetails userDetails, Map<String, Object> extraClaims) {
         logger.debug("Generating token for user: {} with extra claims", userDetails.getUsername());
-        return createToken(extraClaims, userDetails.getUsername());
+        return createToken(extraClaims, userDetails.getUsername(), TOKEN_VALIDITY, SECRET_KEY);
     }
-    private String createToken(Map<String, Object> claims, String subject) {
+
+    private String createToken(Map<String, Object> claims, String subject, int validity, SecretKey key) {
         logger.debug("Creating token with subject: {}", subject);
         return Jwts.builder()
                 .setClaims(claims)
                 .setSubject(subject)
                 .setIssuedAt(new Date(System.currentTimeMillis()))
-                .setExpiration(new Date(System.currentTimeMillis() + TOKEN_VALIDITY * 1000))
-                .signWith(SECRET_KEY)
+                .setExpiration(new Date(System.currentTimeMillis() + validity * 1000))
+                .signWith(key)
                 .compact();
     }
 
@@ -51,6 +60,19 @@ public class JwtUtil {
         logger.debug("Is token valid: {}", isValid);
         return isValid;
     }
+
+    public Boolean validateRefreshToken(String token) {
+        logger.debug("Validating refresh token");
+        try {
+            // Use REFRESH_SECRET_KEY for validation
+            extractAllClaims(token, REFRESH_SECRET_KEY);
+            return true;
+        } catch (Exception e) {
+            logger.error("Invalid refresh token: {}", e.getMessage());
+            return false;
+        }
+    }
+
     private Boolean isTokenExpired(String token) {
         return extractExpiration(token).before(new Date());
     }
@@ -64,11 +86,11 @@ public class JwtUtil {
     }
 
     public <T> T extractClaim(String token, Function<Claims, T> claimsResolver) {
-        final Claims claims = extractAllClaims(token);
+        final Claims claims = extractAllClaims(token, SECRET_KEY);
         return claimsResolver.apply(claims);
     }
 
-    private Claims extractAllClaims(String token) {
-        return Jwts.parserBuilder().setSigningKey(SECRET_KEY).build().parseClaimsJws(token).getBody();
+    private Claims extractAllClaims(String token, SecretKey key) {
+        return Jwts.parserBuilder().setSigningKey(key).build().parseClaimsJws(token).getBody();
     }
 }

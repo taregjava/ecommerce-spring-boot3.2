@@ -24,14 +24,15 @@ public class Order {
     @JsonIgnore
     private List<CartItem> items = new ArrayList<>();
 
-
     @ManyToOne
     @JoinColumn(name = "user_id", nullable = false)
+    @JsonIgnore
     private User user;
 
     private LocalDateTime deliveryDate;
     private String trackingNumber;
-
+    @OneToOne(mappedBy = "order", cascade = CascadeType.ALL)
+    private TrackingInfo trackingInfo;
     public void updateStatus(String newStatus) {
         this.status = newStatus;
     }

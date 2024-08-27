@@ -11,7 +11,7 @@ import java.util.stream.Collectors;
 @Component
 public class UserMapper {
 
-    public UserDto toDTO(User user) {
+    public static UserDto toDTO(User user) {
         return UserDto.builder()
                 .id(user.getId())
                 .username(user.getUsername())
@@ -24,7 +24,7 @@ public class UserMapper {
                 //.authorities(user.getAuthorities())
                 .accountNonLocked(user.isAccountNonLocked())
                 .enabled(user.isEnabled())
-               // .token(user.getToken()) // Assuming you store JWT tokens in the User entity
+                // .token(user.getToken()) // Assuming you store JWT tokens in the User entity
                 .build();
     }
     public UserDto toDTOCart(User user) {

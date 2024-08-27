@@ -9,11 +9,11 @@ import java.util.stream.Collectors;
 @Component
 public class ShoppingCartMapper {
 
-    private final CartItemMapper cartItemMapper;
+
     private final UserMapper userMapper;
 
-    public ShoppingCartMapper(CartItemMapper cartItemMapper, UserMapper userMapper) {
-        this.cartItemMapper = cartItemMapper;
+    public ShoppingCartMapper(UserMapper userMapper) {
+    //    this.cartItemMapper = cartItemMapper;
         this.userMapper = userMapper;
     }
 
@@ -21,7 +21,7 @@ public class ShoppingCartMapper {
         return ShoppingCartDTO.builder()
                 .id(shoppingCart.getId())
                 .items(shoppingCart.getItems().stream()
-                        .map(cartItemMapper::toDTO)
+                        .map(CartItemMapper::toDTO)
                         .collect(Collectors.toList()))
                 .user(userMapper.toDTOCart(shoppingCart.getUser()))
                 .totalPrice(shoppingCart.getTotalPrice())
@@ -32,7 +32,7 @@ public class ShoppingCartMapper {
         ShoppingCart shoppingCart = new ShoppingCart();
         shoppingCart.setId(shoppingCartDTO.getId());
         shoppingCart.setItems(shoppingCartDTO.getItems().stream()
-                .map(cartItemMapper::toEntity)
+                .map(CartItemMapper::toEntity)
                 .collect(Collectors.toList()));
         shoppingCart.setUser(userMapper.toEntity(shoppingCartDTO.getUser()));
         return shoppingCart;

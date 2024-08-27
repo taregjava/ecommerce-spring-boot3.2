@@ -2,6 +2,8 @@ package com.halfacode.ecommMaster.controllers;
 
 import com.halfacode.ecommMaster.models.TrackingInfo;
 import com.halfacode.ecommMaster.services.TrackingService;
+import com.halfacode.ecommMaster.trackinfo.TrackingInfoDTO;
+import com.halfacode.ecommMaster.trackinfo.TrackingInfoResponseDTO;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -20,8 +22,8 @@ public class TrackingController {
     }
 
     @PostMapping
-    public ResponseEntity<TrackingInfo> saveTrackingInfo(@RequestBody TrackingInfo trackingInfo) {
-        TrackingInfo savedInfo = trackingService.saveTrackingInfo(trackingInfo);
-        return ResponseEntity.ok(savedInfo);
+    public ResponseEntity<TrackingInfoResponseDTO> saveTrackingInfo(@RequestBody TrackingInfoDTO trackingInfoDTO) {
+        TrackingInfo savedInfo = trackingService.saveTrackingInfo(trackingInfoDTO);
+        return ResponseEntity.ok(new TrackingInfoResponseDTO(savedInfo));
     }
 }

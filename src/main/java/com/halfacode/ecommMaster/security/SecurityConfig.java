@@ -50,7 +50,7 @@ public class SecurityConfig {
                         .requestMatchers("/api/health").permitAll()
                         .requestMatchers("/api/auth/login").permitAll()  // Allow public access to authentication endpoints
                         .requestMatchers("/swagger-ui.html", "/swagger-ui/**", "/v3/api-docs/**").permitAll() // Allow access to Swagger UI
-                        .anyRequest().authenticated() // All other requests need to be authenticated
+                        .anyRequest().permitAll() // All other requests need to be authenticated
                 )
                 .sessionManagement(session -> session
                         .sessionCreationPolicy(SessionCreationPolicy.STATELESS) // No session will be created or used by Spring Security

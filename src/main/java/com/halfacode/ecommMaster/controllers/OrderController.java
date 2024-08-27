@@ -1,5 +1,6 @@
 package com.halfacode.ecommMaster.controllers;
 
+import com.halfacode.ecommMaster.dto.OrderDTO;
 import com.halfacode.ecommMaster.errors.CustomPaymentException;
 import com.halfacode.ecommMaster.models.CartItem;
 import com.halfacode.ecommMaster.models.Order;
@@ -43,7 +44,7 @@ public class OrderController {
                 return ResponseEntity.badRequest().body("Cart is empty.");
             }
 
-            Order order = orderService.placeOrder(cartItems, discountCode, user);
+            OrderDTO order = orderService.placeOrder(cartItems, discountCode, user);
             return ResponseEntity.ok(order);
         } catch (IllegalArgumentException e) {
             return ResponseEntity.badRequest().body(e.getMessage());

@@ -1,6 +1,8 @@
 package com.halfacode.ecommMaster.services;
 
+import com.halfacode.ecommMaster.dto.OrderDTO;
 import com.halfacode.ecommMaster.errors.CustomPaymentException;
+import com.halfacode.ecommMaster.mapper.OrderMapper;
 import com.halfacode.ecommMaster.models.CartItem;
 import com.halfacode.ecommMaster.models.Discount;
 import com.halfacode.ecommMaster.models.Order;
@@ -11,6 +13,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 
 @Service
@@ -34,7 +37,7 @@ public class OrderService {
     }
 
     @Transactional
-    public Order placeOrder(List<CartItem> cartItems, String discountCode, User user) {
+    public OrderDTO placeOrder(List<CartItem> cartItems, String discountCode, User user) {
         try {
             // Validate and apply discount
             double discountPercentage = 0;
@@ -73,7 +76,7 @@ public class OrderService {
             // Create and save order
             Order order = new Order();
             order.setOrderDate(LocalDateTime.now());
-            order.setItems(cartItems);
+            order.setItems(new ArrayList<>(cartItems)); // Create a new list to avoid shared references
             order.setTotalAmount(discountedAmount);
             order.setUser(user);
             Order savedOrder = orderRepository.save(order);
@@ -85,7 +88,7 @@ public class OrderService {
             shoppingCartService.clearCart(user);
             System.out.println("Cart cleared for user: " + user.getUsername());
 
-            return savedOrder;
+            return OrderMapper.toDTO(savedOrder);
 
         } catch (IllegalArgumentException e) {
             // Handle invalid discount code
@@ -101,6 +104,7 @@ public class OrderService {
             throw new RuntimeException("An unexpected error occurred while placing the order: " + e.getMessage(), e);
         }
     }
+
 
 
 

@@ -1,5 +1,6 @@
 package com.halfacode.ecommMaster.controllers;
 
+import com.halfacode.ecommMaster.dto.OrderDTO;
 import com.halfacode.ecommMaster.models.*;
 import com.halfacode.ecommMaster.services.*;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -56,7 +57,7 @@ public class CheckoutController {
 
     // Endpoint to checkout the cart
     @PostMapping("/checkout")
-    public ResponseEntity<Order> checkout(@RequestHeader("Authorization") String authHeader,
+    public ResponseEntity<OrderDTO> checkout(@RequestHeader("Authorization") String authHeader,
                                           @RequestParam("paymentMethod") String paymentMethod) {
         User user = userService.getUserFromAuthHeader(authHeader);
         ShoppingCart cart = cartService.getCartByUser(user);
@@ -67,7 +68,7 @@ public class CheckoutController {
                 .sum();
 
         // Place order
-        Order order = orderService.placeOrder(cart.getItems(), paymentMethod, user);
+        OrderDTO order = orderService.placeOrder(cart.getItems(), paymentMethod, user);
 
         // Clear cart after successful order
         cartService.clearCart(user);

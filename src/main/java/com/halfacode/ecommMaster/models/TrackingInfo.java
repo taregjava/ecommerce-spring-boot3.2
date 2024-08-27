@@ -26,6 +26,8 @@ public class TrackingInfo {
 
     @OneToMany(mappedBy = "trackingInfo", cascade = CascadeType.ALL)
     private List<TrackingEvent> trackingHistory;
-
+    @OneToOne
+    @JoinColumn(name = "order_id")
+    private Order order;  // Reference to the Order entity
     // Getters and Setters
 }

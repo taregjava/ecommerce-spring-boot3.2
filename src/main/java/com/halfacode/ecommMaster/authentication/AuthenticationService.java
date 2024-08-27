@@ -2,6 +2,8 @@ package com.halfacode.ecommMaster.authentication;
 
 import com.halfacode.ecommMaster.dto.UserDto;
 import com.halfacode.ecommMaster.mapper.UserMapper;
+import com.halfacode.ecommMaster.models.User;
+import com.halfacode.ecommMaster.repositories.UserRepository;
 import com.halfacode.ecommMaster.security.JwtUtil;
 import com.halfacode.ecommMaster.security.CustomUserDetails;
 import com.halfacode.ecommMaster.security.CustomUserDetailsService;
@@ -14,6 +16,7 @@ import org.springframework.stereotype.Service;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Optional;
 
 @Service
 public class AuthenticationService {
@@ -28,31 +31,28 @@ public class AuthenticationService {
     private JwtUtil jwtUtil;
 
     @Autowired
+    private UserRepository userRepository;
+    @Autowired
     private UserMapper userMapper;
 
     public UserDto authenticate(String username, String password) throws Exception {
         try {
-            // Authenticate the user
             authenticationManager.authenticate(
                     new UsernamePasswordAuthenticationToken(username, password));
 
-            // Load user details
             UserDetails userDetails = customUserDetailsService.loadUserByUsername(username);
 
             if (userDetails instanceof CustomUserDetails) {
                 CustomUserDetails customUser = (CustomUserDetails) userDetails;
 
-                // Convert User to UserDto
                 UserDto userDto = userMapper.toDTO(customUser.getUser());
 
-                // Generate JWT token with extra claims
                 Map<String, Object> extraClaims = new HashMap<>();
                 extraClaims.put("roles", userDto.getRole());
 
                 String jwt = jwtUtil.generateToken(userDetails, extraClaims);
-                userDto.setToken(jwt); // Add the generated token to the UserDto
+                userDto.setToken(jwt);
 
-                // Return the DTO without authorities
                 return userDto;
             } else {
                 throw new Exception("Failed to authenticate user");
@@ -60,5 +60,18 @@ public class AuthenticationService {
         } catch (BadCredentialsException e) {
             throw new Exception("Invalid credentials", e);
         }
+    }
+
+    public boolean activateUser(String username) {
+        Optional<User> optionalUser = userRepository.findByUsername(username);
+        if (optionalUser.isPresent()) {
+            User user = optionalUser.get();
+            if (!user.isEnabled()) {
+                user.setEnabled(true);
+                userRepository.save(user);
+                return true;
+            }
+        }
+        return false;
     }
 }

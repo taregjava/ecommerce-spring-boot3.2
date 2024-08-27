@@ -54,4 +54,26 @@ public class ProductMapper {
 
         return product;
     }
+
+    public static ProductDTO toCartDTO(Product product) {
+        if (product == null) {
+            return null;
+        }
+
+        return ProductDTO.builder()
+                .id(product.getId())
+                .name(product.getName())
+                .description(product.getDescription())
+                .price(product.getPrice())
+                .stockQuantity(product.getStockQuantity())
+                .isAvailable(product.getIsAvailable())
+                .averageRating(product.getAverageRating())
+                .basePrice(product.getBasePrice())
+                .salesCount(product.getSalesCount())
+                .category(product.getCategory() != null ?
+                        new CategoryDTO(product.getCategory().getName(), product.getCategory().getDescription()) : null)
+                .build();
+    }
+
+
 }
