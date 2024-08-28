@@ -43,20 +43,25 @@ public class SecurityConfig {
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
-        http.csrf(AbstractHttpConfigurer::disable)
+        http
+                .csrf(AbstractHttpConfigurer::disable)
                 .cors(AbstractHttpConfigurer::disable)
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/api/auth/register").permitAll()
                         .requestMatchers("/api/health").permitAll()
-                        .requestMatchers("/api/auth/login").permitAll()  // Allow public access to authentication endpoints
-                        .requestMatchers("/swagger-ui.html", "/swagger-ui/**", "/v3/api-docs/**").permitAll() // Allow access to Swagger UI
-                        .anyRequest().permitAll() // All other requests need to be authenticated
+                        .requestMatchers("/api/auth/login").permitAll()
+                        .requestMatchers("/swagger-ui.html", "/swagger-ui/**", "/v3/api-docs/**").permitAll()
+                        .requestMatchers("/h2-console/**").permitAll()  // Allow access to H2 console
+                        .anyRequest().authenticated()
                 )
                 .sessionManagement(session -> session
-                        .sessionCreationPolicy(SessionCreationPolicy.STATELESS) // No session will be created or used by Spring Security
+                        .sessionCreationPolicy(SessionCreationPolicy.STATELESS)
+                )
+                // Disable frame options without using deprecated methods
+                .headers(headers -> headers
+                        .frameOptions(frameOptions -> frameOptions.disable())
                 );
 
-        // Ensure JwtRequestFilter is added before UsernamePasswordAuthenticationFilter
         http.addFilterBefore(jwtRequestFilter, UsernamePasswordAuthenticationFilter.class);
 
         return http.build();

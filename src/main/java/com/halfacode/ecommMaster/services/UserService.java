@@ -4,7 +4,12 @@ import com.halfacode.ecommMaster.models.Role;
 import com.halfacode.ecommMaster.models.User;
 import com.halfacode.ecommMaster.repositories.RoleRepository;
 import com.halfacode.ecommMaster.repositories.UserRepository;
+import com.halfacode.ecommMaster.security.JwtUtil;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -20,6 +25,8 @@ public class UserService {
     @Autowired
     private PasswordEncoder passwordEncoder;
 
+    @Autowired
+    private JwtUtil jwtUtil;
     @Autowired
     private RoleRepository roleRepository;
    /* public User authenticate(String username, String password) {
@@ -51,7 +58,15 @@ public class UserService {
     }
 
     public User getUserFromAuthHeader(String authHeader) {
-        // Implementation for extracting user from authorization header if needed
-        return new User();
+    //    logger.debug("Received authHeader: {}", authHeader);
+        if (authHeader == null || !authHeader.startsWith("Bearer ")) {
+            throw new IllegalArgumentException("Invalid authorization header format.");
+        }
+        String token = authHeader.substring(7); // Remove "Bearer " prefix
+      //  logger.debug("Token after stripping prefix: {}", token);
+        String username = jwtUtil.extractUsername(token);
+
+        return userRepository.findByUsername(username)
+                .orElseThrow(() -> new UsernameNotFoundException("User not found"));
     }
 }
