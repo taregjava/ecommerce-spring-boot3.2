@@ -29,14 +29,14 @@ public class CheckoutController {
     private RecommendationService recommendationService;
 
     // Endpoint to add an item to the cart
-    @PostMapping("/add")
+    /*@PostMapping("/add")
     public ResponseEntity<ShoppingCart> addToCart(@RequestHeader("Authorization") String authHeader,
                                                   @RequestParam Long productId,
                                                   @RequestParam int quantity) {
         User user = userService.getUserFromAuthHeader(authHeader);
         ShoppingCart cart = cartService.addToCart(user, productId, quantity);
         return ResponseEntity.ok(cart);
-    }
+    }*/
 
     // Endpoint to remove an item from the cart
     @PostMapping("/remove")

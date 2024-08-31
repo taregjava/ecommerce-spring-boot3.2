@@ -16,7 +16,8 @@ public class User {
     private String password; // In a real application, passwords should be hashed
     private boolean enabled;
     private boolean accountNonLocked;
-
+    private int loyaltyPoints;
+    private String tier;
     @ManyToMany(fetch = FetchType.EAGER)
     @JoinTable(
             name = "user_roles",

@@ -33,6 +33,8 @@ public class DataInitializer {
     private DiscountRepository discountRepository;
     @Autowired
     private PasswordEncoder passwordEncoder;
+    @Autowired
+    private TierRepository tierRepository;
     @Bean
     public CommandLineRunner initializeData() {
         return args -> {
@@ -55,12 +57,15 @@ public class DataInitializer {
             adminUser.setAccountNonLocked(true);
             adminUser.setRoles(new HashSet<>(Set.of(roles.get(1)))); // Assign ROLE_ADMIN
             adminUser.setPassword(passwordEncoder.encode("admin123"));
+            adminUser.setTier("Gold");
 
             User regularUser = new User();
             regularUser.setUsername("user");
             //regularUser.setPassword("user123");  // In a real app, hash the password
             regularUser.setEnabled(true);
             regularUser.setAccountNonLocked(true);
+            regularUser.setTier("Basic");
+
             regularUser.setRoles(new HashSet<>(Set.of(roles.get(0)))); // Assign ROLE_USER
             regularUser.setPassword(passwordEncoder.encode("user123"));
 
@@ -68,6 +73,19 @@ public class DataInitializer {
                 userRepository.save(adminUser);
                 userRepository.save(regularUser);
             }
+
+            List<Tier> tiers = List.of(
+                    new Tier("Basic", 1),
+                    new Tier("Silver", 2),
+                    new Tier("Gold", 3),
+                    new Tier("Platinum", 4)
+            );
+
+            // Check if tiers already exist; if not, save them
+            if (tierRepository.count() == 0) {
+                tierRepository.saveAll(tiers);
+            }
+
 // Initialize discounts
             Discount discount1 = new Discount();
             discount1.setCode("SUMMER2024");

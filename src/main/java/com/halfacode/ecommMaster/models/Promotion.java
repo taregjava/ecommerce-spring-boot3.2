@@ -26,6 +26,15 @@ public class Promotion {
     @ManyToMany
     private List<Product> applicableProducts;
 
+    @ElementCollection
+    @CollectionTable(name = "promotion_tiers", joinColumns = @JoinColumn(name = "promotion_id"))
+    @Column(name = "tier")
+    private List<String> applicableTiers; // List of tiers this promotion applies to
+
+    // Method to check if a promotion is active
+    public boolean isActive(LocalDateTime now) {
+        return active && now.isAfter(startDate) && now.isBefore(endDate);
+    }
+
     // Getters and setters...
 }
-
