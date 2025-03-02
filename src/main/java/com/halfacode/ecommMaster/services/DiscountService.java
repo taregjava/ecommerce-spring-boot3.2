@@ -10,13 +10,9 @@ public class DiscountService {
 
     @Autowired
     private DiscountRepository discountRepository;
-    public Discount getDiscountByCode(String discountCode) {
-        // Assuming you fetch the discount from the database
-        Discount discount = discountRepository.findByCode(discountCode);
-        if (discount == null) {
-            // Handle the case where no discount is found
-            throw new IllegalArgumentException("Invalid discount code");
-        }
-        return discount;
+    public Discount getDiscountByCode(String code) {
+        return discountRepository.findByCode(code)
+                .orElseThrow(() -> new IllegalArgumentException("Invalid discount code: " + code));
     }
+
 }

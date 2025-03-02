@@ -22,4 +22,6 @@ public class UserDto {
     private boolean accountNonLocked;
     private boolean enabled;
     private String token;
+
+
 }

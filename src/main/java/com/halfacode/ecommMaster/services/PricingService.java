@@ -13,7 +13,7 @@ public class PricingService {
         double basePrice = product.getBasePrice();
 
         // Adjust price based on user location
-        String location = user.getLocation();
+        String location = String.valueOf(user.getLocation());
         if ("Riyadh".equals(location)) {
             basePrice += basePrice * 0.1; // 10% markup
         }

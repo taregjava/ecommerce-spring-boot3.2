@@ -8,7 +8,7 @@ import org.springframework.stereotype.Component;
 @Component
 public class CartItemMapper {
 
-    public static CartItemDTO toDTO(CartItem cartItem) {
+    public CartItemDTO toDTO(CartItem cartItem) {
         return CartItemDTO.builder()
                 .id(cartItem.getId())
                 .product(ProductMapper.toDTO(cartItem.getProduct()))
@@ -17,7 +17,7 @@ public class CartItemMapper {
                 .build();
     }
 
-    public static CartItem toEntity(CartItemDTO cartItemDTO) {
+    public CartItem toEntity(CartItemDTO cartItemDTO) {
         return CartItem.builder()
                 .id(cartItemDTO.getId())
                 .product(ProductMapper.toEntity(cartItemDTO.getProduct()))

@@ -5,6 +5,7 @@ import com.halfacode.ecommMaster.models.User;
 import com.halfacode.ecommMaster.repositories.RoleRepository;
 import com.halfacode.ecommMaster.repositories.UserRepository;
 import com.halfacode.ecommMaster.security.JwtUtil;
+import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -44,18 +45,27 @@ public class UserService {
         return userRepository.findById(id).orElse(null);
     }
 
+    @Transactional
     public User saveUser(User user, Set<Long> roleIds) {
+        // Encode password
         user.setPassword(passwordEncoder.encode(user.getPassword()));
 
-        // Fetch roles from the database
+        // Fetch roles
         Set<Role> roles = new HashSet<>();
         for (Long roleId : roleIds) {
-            roleRepository.findById(roleId).ifPresent(roles::add);
+            roleRepository.findById(roleId).ifPresentOrElse(
+                    roles::add,
+                    () -> {
+                        throw new IllegalArgumentException("Role ID " + roleId + " does not exist.");
+                    }
+            );
         }
         user.setRoles(roles);
 
+        // Save user
         return userRepository.save(user);
     }
+
 
     public User getUserFromAuthHeader(String authHeader) {
     //    logger.debug("Received authHeader: {}", authHeader);

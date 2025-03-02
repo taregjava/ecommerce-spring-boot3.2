@@ -1,5 +1,6 @@
 package com.halfacode.ecommMaster.services;
 
+import com.halfacode.ecommMaster.models.AddressDetails;
 import com.halfacode.ecommMaster.models.Order;
 import com.halfacode.ecommMaster.models.TrackingInfo;
 import com.halfacode.ecommMaster.repositories.OrderRepository;
@@ -18,7 +19,7 @@ public class TrackingService {
     private OrderRepository orderRepository;
 
     public TrackingInfo getTrackingInfo(String orderNumber) {
-        return trackingInfoRepository.findByOrderNumber(orderNumber);
+        return trackingInfoRepository.findByOrder_TrackingNumber(orderNumber);
     }
 
     public TrackingInfo saveTrackingInfo(TrackingInfoDTO trackingInfoDTO) {
@@ -34,6 +35,15 @@ public class TrackingService {
         trackingInfo.setCourier(trackingInfoDTO.getCourier());
         trackingInfo.setOrder(order);
 
+        // ✅ FIX: Populate AddressDetails
+        AddressDetails addressDetails = new AddressDetails();
+        addressDetails.setStreet(trackingInfoDTO.getStreet());
+        addressDetails.setCity(trackingInfoDTO.getCity());
+        addressDetails.setNearbyLandmark(trackingInfoDTO.getNearbyLandmark());
+        addressDetails.setPostalCode(trackingInfoDTO.getPostalCode());
+
+        trackingInfo.setAddressDetails(addressDetails); // ✅ Set it before saving
+
         // Step 3: Save the TrackingInfo in the database
         TrackingInfo savedInfo = trackingInfoRepository.save(trackingInfo);
 
@@ -44,4 +54,5 @@ public class TrackingService {
         // Step 5: Return the saved TrackingInfo
         return savedInfo;
     }
+
 }

@@ -1,24 +1,36 @@
 spring:
-  port: 8082
+  profiles:
+    active: private
+  cache:
+    type: none
   datasource:
-    url: jdbc:h2:mem:testdb
-    driver-class-name: org.h2.Driver
-    username: sa
+    url: jdbc:mysql://localhost:3306/ecommerce-sh
+    username: root
     password:
-  h2:
-    console:
-      enabled: true  # Proper indentation here
-      path: /h2-console  # Proper indentation here
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    #username: root
+   # password: 0912658511Ts@
+    hikari:
+      max-lifetime: 1800000         # 30 minutes
+      idle-timeout: 300000          # 5 minutes
+      connection-test-query: SELECT 1
+      maximum-pool-size: 10         # Adjust pool size based on your needs
   jpa:
     hibernate:
       ddl-auto: update
       properties:
-        hibernate.dialect: org.hibernate.dialect.H2Dialect
+        hibernate.dialect: org.hibernate.dialect.MySQL8Dialect
     show-sql: true
+  h2:
+    console:
+      enabled: false  # Disable H2 console if you're not using H2 anymore
 
 springdoc:
   api-docs:
-    enabled: true
+    enabled: true  # Enable OpenAPI documentation generation
   swagger-ui:
-    enabled: true
-    path: /swagger-ui.html
+    enabled: true  # Enable Swagger UI
+    path: /swagger-ui.html  # Path to Swagger UI
+
+cloudinary:
+  cloud_name: dfpsqiiee  # Keep only cloud_name here

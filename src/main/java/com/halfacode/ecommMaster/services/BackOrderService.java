@@ -38,6 +38,6 @@ public class BackOrderService {
                 backOrderRepository.delete(backOrder);
             }
         }
-        productService.addProduct(product);
+      //  productService.addProduct(product);
     }
 }

@@ -31,13 +31,25 @@ public class ShoppingCartController {
     // Endpoint to add a product to the shopping cart
     @PostMapping("/addcart")
     public ResponseEntity<ShoppingCartDTO> addToCart(@RequestParam Long userId, @RequestParam Long productId, @RequestParam int quantity) {
-        User user = userService.getUserById(userId);  // Fetch the user by ID
-        ShoppingCart cart = shoppingCartService.addToCart(user, productId, quantity);  // Add product to cart
-        ShoppingCartDTO cartDTO = shoppingCartMapper.toDTO(cart);  // Map to DTO
-        return ResponseEntity.ok(cartDTO);  // Return the updated cart DTO
+        User user = userService.getUserById(userId);
+        ShoppingCart cart = shoppingCartService.addToCart(user, productId, quantity);
+        ShoppingCartDTO cartDTO = shoppingCartMapper.toDTO(cart);
+        return ResponseEntity.ok(cartDTO);
     }
 
 
+    @PostMapping("/addcartwithshipping")
+    public ResponseEntity<ShoppingCartDTO> addToCartWithShipping(
+            @RequestParam Long userId,
+            @RequestParam Long productId,
+            @RequestParam int quantity,
+            @RequestParam String customerCountry) {
+
+        User user = userService.getUserById(userId);  // Fetch the user by ID
+        ShoppingCart cart = shoppingCartService.addToCartWithShipping(user, productId, quantity, customerCountry);  // Add product to cart with shipping cost
+        ShoppingCartDTO cartDTO = shoppingCartMapper.toDTO(cart);  // Map to DTO
+        return ResponseEntity.ok(cartDTO);  // Return the updated cart DTO
+    }
 
     // Additional endpoints for removing items, clearing the cart, etc., can be added here
 }

@@ -10,5 +10,8 @@ public class TrackingInfoDTO {
     private String courier;
     private Long orderId;
 
-
+    private String street;
+    private String city;
+    private String nearbyLandmark;
+    private String postalCode;
 }

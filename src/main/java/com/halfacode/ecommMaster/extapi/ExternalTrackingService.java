@@ -37,9 +37,7 @@ public class ExternalTrackingService {
         trackingInfo.setCurrentLocation(response.getCurrentLocation());
         trackingInfo.setDistanceToCustomer(response.getDistanceToCustomer());
         trackingInfo.setPackageStatus(response.getPackageStatus());
-        trackingInfo.setOrderNumber(response.getOrderNumber());
         trackingInfo.setCourier(response.getCourier());
-
         AddressDetails addressDetails = new AddressDetails();
         addressDetails.setStreet(response.getStreet());
         addressDetails.setCity(response.getCity());

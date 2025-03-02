@@ -37,6 +37,8 @@ public class Product {
     @JsonIgnore // Avoid circular reference
     private List<Review> reviews = new ArrayList<>();
 
+    @OneToMany(mappedBy = "product", cascade = CascadeType.ALL)
+    private List<Image> images;
     @Transient
     private double averageRating;
 

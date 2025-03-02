@@ -1,6 +1,7 @@
 package com.halfacode.ecommMaster.controllers;
 
 import com.halfacode.ecommMaster.dto.OrderDTO;
+import com.halfacode.ecommMaster.dto.PlaceOrderRequest;
 import com.halfacode.ecommMaster.errors.CustomPaymentException;
 import com.halfacode.ecommMaster.models.CartItem;
 import com.halfacode.ecommMaster.models.Order;
@@ -34,8 +35,11 @@ public class OrderController {
 
     // Endpoint to place an order
     @PostMapping("/place")
-    public ResponseEntity<?> placeOrder(@RequestParam String discountCode, @RequestParam Long userId) {
+    public ResponseEntity<?> placeOrder(@RequestBody PlaceOrderRequest request) {
         try {
+            Long userId = request.getUserId();
+            String discountCode = request.getDiscountCode();
+
             User user = userService.getUserById(userId);
             ShoppingCart shoppingCart = shoppingCartService.getCartByUser(user);
             List<CartItem> cartItems = shoppingCart.getItems();

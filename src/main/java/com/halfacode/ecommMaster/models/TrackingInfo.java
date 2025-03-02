@@ -15,12 +15,9 @@ public class TrackingInfo {
     private String currentLocation;
     private double distanceToCustomer;
     private String packageStatus;
-    private String orderNumber;
     private String courier;
-
     @OneToMany(mappedBy = "trackingInfo", cascade = CascadeType.ALL)
     private List<ItemDetail> items;
-
     @Embedded
     private AddressDetails addressDetails;
 
