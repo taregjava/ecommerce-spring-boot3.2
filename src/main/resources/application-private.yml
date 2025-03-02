@@ -1,8 +1,0 @@
-spring:
-  datasource:
-    #url: jdbc:mysql://146.190.72.200:3306/ecommerce
-    #username: root
-    #password: 0912658511Ts@  # Keep this private!
-cloudinary:
-  api_key: 265971377423727
-  api_secret: o1V1_kHYe3A1uq83kDygNktzFqI
