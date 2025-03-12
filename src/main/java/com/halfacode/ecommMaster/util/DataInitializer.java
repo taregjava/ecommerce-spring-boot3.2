@@ -2,6 +2,7 @@ package com.halfacode.ecommMaster.util;
 
 import com.halfacode.ecommMaster.models.*;
 import com.halfacode.ecommMaster.repositories.*;
+import jakarta.annotation.PostConstruct;
 import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.CommandLineRunner;
@@ -43,6 +44,11 @@ public class DataInitializer {
     @Autowired
     private LocationRepository locationRepository;
 
+    @Autowired
+    private  ProductInventoryRepository productInventoryRepository;
+
+    @Autowired
+    private CountryRepository countryRepository;
     @Bean
     public CommandLineRunner initializeData() {
         return args -> {
@@ -51,6 +57,8 @@ public class DataInitializer {
             initializeCategories();
             initializeProducts();
             initializeReviews();
+            initializeDiscounts();
+            initializeCountries();
         };
     }
 
@@ -147,4 +155,60 @@ public class DataInitializer {
             reviewRepository.saveAll(reviews);
         }
     }
+
+    @PostConstruct
+    @Transactional
+    public void initializeProductInventory() {
+        if (productInventoryRepository.count() == 0) {
+            List<Product> products = productRepository.findAll();
+            List<Location> locations = locationRepository.findAll();
+
+            // If no locations exist, create default ones
+            if (locations.isEmpty()) {
+                Location defaultLocation1 = new Location(null, "Warehouse A", "123 Street", "USA", "New York", "10001", 40.7128, -74.0060, "192.168.1.1", null);
+                Location defaultLocation2 = new Location(null, "Warehouse B", "456 Road", "Canada", "Toronto", "M4B 1B3", 43.6532, -79.3832, "192.168.1.2", null);
+                locations = locationRepository.saveAll(List.of(defaultLocation1, defaultLocation2));
+            }
+
+            if (!products.isEmpty()) {
+                List<ProductInventory> inventories = List.of(
+                        new ProductInventory(products.get(0), locations.get(0), 50, true),
+                        new ProductInventory(products.get(0), locations.get(1), 30, true),
+                        new ProductInventory(products.get(1), locations.get(0), 20, true),
+                        new ProductInventory(products.get(1), locations.get(1), 15, false) // Out of stock case
+                );
+
+                productInventoryRepository.saveAll(inventories);
+            }
+        }
+    }
+
+    private void initializeDiscounts() {
+        if (discountRepository.count() == 0) {
+            List<Discount> discounts = List.of(
+                    new Discount(null, "WELCOME10", 10.0, LocalDate.now(), LocalDate.now().plusMonths(1)),
+                    new Discount(null, "SUMMER15", 15.0, LocalDate.now(), LocalDate.now().plusMonths(2))
+            );
+            discountRepository.saveAll(discounts);
+        }
+    }
+
+    private void initializeCountries() {
+        if (countryRepository.count() == 0) {
+            List<Country> countries = List.of(
+                    new Country("United States", "US"),
+                    new Country("Canada", "CA"),
+                    new Country("Germany", "DE"),
+                    new Country("India", "IN"),
+                    new Country("United Kingdom", "GB"),
+                    new Country("Australia", "AU"),
+                    new Country("France", "FR"),
+                    new Country("Italy", "IT"),
+                    new Country("Spain", "ES"),
+                    new Country("Japan", "JP")
+            );
+            countryRepository.saveAll(countries);
+        }
+    }
+
 }

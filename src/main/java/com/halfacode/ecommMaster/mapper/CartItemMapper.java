@@ -26,18 +26,10 @@ public class CartItemMapper {
                 .build();
     }
 
-    public static CartItemDTO toOrder(CartItem cartItem) {
-        return CartItemDTO.builder()
-                .id(cartItem.getId())
-                .product(ProductMapper.toCartDTO(cartItem.getProduct()))
-                .quantity(cartItem.getQuantity())
-                // .totalPrice(cartItem.getTotalPrice())
-                .build();
-    }
     public static OrderItemDTO toOrderItemDTO(CartItem cartItem) {
         return OrderItemDTO.builder()
                 .id(cartItem.getId())
-                .productName(cartItem.getProduct().getName())  // Map product name directly
+                .productName(cartItem.getProduct().getName())
                 .quantity(cartItem.getQuantity())
                 .build();
     }

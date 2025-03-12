@@ -24,12 +24,14 @@ public class ShoppingCartService {
     private UserService userService;
     @Autowired
     private ProductInventoryRepository productInventoryRepository;
+
     @Autowired
     private InventoryService inventoryService;
     public ShoppingCart getCartByUser(User user) {
         return cartRepository.findByUser(user).orElseGet(() -> {
             ShoppingCart newCart = new ShoppingCart();
             newCart.setUser(user); // Set the user for the new cart
+            newCart.setLocation(user.getLocation()); // ✅ Ensure location is set
             return newCart;
         });
     }
@@ -87,18 +89,38 @@ public class ShoppingCartService {
 */
 
     public ShoppingCart addToCart(User user, Long productId, int quantity) {
-        ShoppingCart cart = getCartByUser(user);  // Fetch or create a cart for the user
-        Product product = productService.getProductEntityById(productId);  // Fetch the product
-        cart.addItem(product, quantity);  // Add the product to the cart
+        ShoppingCart cart = getCartByUser(user);
+        Product product = productService.getProductEntityById(productId);
 
-        // Update total price
+        if (product == null || !product.getIsAvailable()) {
+            throw new RuntimeException("Product not available");
+        }
+
+        if (product.getStockQuantity() < quantity) {
+            throw new RuntimeException("Not enough stock available");
+        }
+
+        cart.addItem(product, quantity);
         cart.updateTotalPrice();
-
-        ShoppingCart updatedCart = cartRepository.save(cart);  // Save the updated cart
-        return updatedCart;
+        if (cart.getLocation() == null) {
+            cart.setLocation(user.getLocation());
+        }
+        return cartRepository.save(cart);
     }
 
 
+  /*  public ShoppingCart createCart(User user) {
+        ShoppingCart cart = new ShoppingCart();
+        cart.setUser(user);
+
+        // ✅ Assign default location based on country
+        Location defaultLocation = locationRepository.findFirstByCountry("United Arab Emirates")
+                .orElseThrow(() -> new RuntimeException("Default location not found for United Arab Emirates"));
+
+        cart.setLocation(defaultLocation);
+
+        return shoppingCartRepository.save(cart);
+    }*/
 
     @Transactional
     public ShoppingCart addToCartWithShipping(User user, Long productId, int quantity, String customerCountry) {

@@ -3,10 +3,8 @@ package com.halfacode.ecommMaster.services;
 import com.halfacode.ecommMaster.dto.OrderDTO;
 import com.halfacode.ecommMaster.errors.CustomPaymentException;
 import com.halfacode.ecommMaster.mapper.OrderMapper;
-import com.halfacode.ecommMaster.models.CartItem;
-import com.halfacode.ecommMaster.models.Discount;
-import com.halfacode.ecommMaster.models.Order;
-import com.halfacode.ecommMaster.models.User;
+import com.halfacode.ecommMaster.models.*;
+import com.halfacode.ecommMaster.repositories.AddressRepository;
 import com.halfacode.ecommMaster.repositories.OrderRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -15,6 +13,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.UUID;
 
 @Service
 public class OrderService {
@@ -24,23 +23,78 @@ public class OrderService {
     private final PaymentService paymentService;
     private final DiscountService discountService;
     private final ShoppingCartService shoppingCartService;
-
+    private final AddressRepository addressRepository;
     @Autowired
     public OrderService(OrderRepository orderRepository, ProductService productService,
                         PaymentService paymentService, DiscountService discountService,
-                        ShoppingCartService shoppingCartService) {
+                        ShoppingCartService shoppingCartService, AddressRepository addressRepository) {
         this.orderRepository = orderRepository;
         this.productService = productService;
         this.paymentService = paymentService;
         this.discountService = discountService;
         this.shoppingCartService = shoppingCartService;
+        this.addressRepository = addressRepository;
     }
 
     @Transactional
-    public OrderDTO placeOrder(List<CartItem> cartItems, String discountCode, User user) {
+    public OrderDTO placeOrder(List<CartItem> cartItems, String discountCode, User user, Long addressId) {
+        // If addressId is null, use the default address of the user
+        Address shippingAddress = (addressId != null)
+                ? addressRepository.findById(addressId).orElse(null)
+                : addressRepository.findByUserAndDefaultAddressTrue(user);
+
+        if (shippingAddress == null) {
+            throw new RuntimeException("Shipping address is required");
+        }
+
+        double discountPercentage = 0;
+        if (discountCode != null && !discountCode.isEmpty()) {
+            Discount discount = discountService.getDiscountByCode(discountCode);
+            if (discount != null && discount.isActive()) {
+                discountPercentage = discount.getPercentage();
+            } else {
+                throw new IllegalArgumentException("Invalid or expired discount code");
+            }
+        }
+
+        double totalAmount = cartItems.stream()
+                .mapToDouble(CartItem::getTotalPrice)
+                .sum();
+        double discountedAmount = totalAmount * (1 - discountPercentage / 100);
+
+        boolean paymentSuccessful = paymentService.processPayment(user, discountedAmount, "CREDIT_CARD");
+        if (!paymentSuccessful) {
+            throw new CustomPaymentException("Payment failed for user: " + user.getUsername());
+        }
+
+        for (CartItem item : cartItems) {
+            productService.updateStock(item.getProduct().getId(), item.getQuantity());
+        }
+
+        Order order = new Order();
+        order.setOrderDate(LocalDateTime.now());
+        order.setItems(new ArrayList<>(cartItems));
+        order.setTotalAmount(discountedAmount);
+        order.setUser(user);
+        order.setShippingAddress(shippingAddress);
+        order.setStatus("Pending");
+        order.setTrackingNumber(UUID.randomUUID().toString());
+        order.setDeliveryDate(LocalDateTime.now().plusDays(5));
+
+        Order savedOrder = orderRepository.save(order);
+
+        shoppingCartService.clearCart(user);
+
+        return OrderMapper.toDTO(savedOrder);
+    }
+
+
+    @Transactional
+    public OrderDTO placeOrderCart(List<CartItem> cartItems, String discountCode, String paymentMethod, User user) {
         try {
-            // Validate and apply discount
             double discountPercentage = 0;
+
+            // Validate and apply discount if provided
             if (discountCode != null && !discountCode.isEmpty()) {
                 Discount discount = discountService.getDiscountByCode(discountCode);
                 if (discount != null && discount.isActive()) {
@@ -50,18 +104,17 @@ public class OrderService {
                 }
             }
 
-            // Calculate total amount with discount
+            // Calculate total amount with or without discount
             double totalAmount = cartItems.stream()
                     .mapToDouble(CartItem::getTotalPrice)
                     .sum();
             double discountedAmount = totalAmount * (1 - discountPercentage / 100);
 
-            // Log the amounts
             System.out.println("Total Amount: " + totalAmount);
             System.out.println("Discounted Amount: " + discountedAmount);
 
-            // Simulate payment processing
-            boolean paymentSuccessful = paymentService.processPayment(user, discountedAmount, "CREDIT_CARD");
+            // Process payment
+            boolean paymentSuccessful = paymentService.processPayment(user, discountedAmount, paymentMethod);
             if (!paymentSuccessful) {
                 throw new CustomPaymentException("Payment failed for user: " + user.getUsername());
             }
@@ -69,42 +122,43 @@ public class OrderService {
             // Reduce stock
             for (CartItem item : cartItems) {
                 productService.updateStock(item.getProduct().getId(), item.getQuantity());
-                // Log stock update
                 System.out.println("Updated stock for product ID: " + item.getProduct().getId());
             }
 
             // Create and save order
             Order order = new Order();
             order.setOrderDate(LocalDateTime.now());
-            order.setItems(new ArrayList<>(cartItems)); // Create a new list to avoid shared references
+            order.setItems(new ArrayList<>(cartItems));
             order.setTotalAmount(discountedAmount);
             order.setUser(user);
+            order.setPaymentMethod(paymentMethod);
+
+            order.setStatus("Pending"); //
+            order.setTrackingNumber(UUID.randomUUID().toString()); // Generate tracking number
+            order.setDeliveryDate(LocalDateTime.now().plusDays(5)); // Example delivery date
+
             Order savedOrder = orderRepository.save(order);
 
-            // Log order details
+
             System.out.println("Saved Order ID: " + savedOrder.getId());
 
-            // Clear cart after order is placed
+            // Clear cart
             shoppingCartService.clearCart(user);
             System.out.println("Cart cleared for user: " + user.getUsername());
 
             return OrderMapper.toDTO(savedOrder);
 
         } catch (IllegalArgumentException e) {
-            // Handle invalid discount code
             System.err.println("Invalid discount code: " + e.getMessage());
             throw new RuntimeException("Order placement failed due to invalid discount: " + e.getMessage(), e);
         } catch (CustomPaymentException e) {
-            // Handle payment failure specifically
             System.err.println("Payment error: " + e.getMessage());
             throw new CustomPaymentException("Order placement failed due to payment failure: " + e.getMessage(), e);
         } catch (Exception e) {
-            // Handle any other unforeseen errors
             System.err.println("Unexpected error: " + e.getMessage());
             throw new RuntimeException("An unexpected error occurred while placing the order: " + e.getMessage(), e);
         }
     }
-
 
 
 

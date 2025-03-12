@@ -1,20 +1,19 @@
 package com.halfacode.ecommMaster.models;
 
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.OneToMany;
-import jakarta.persistence.Table;
+import jakarta.persistence.*;
 
 import java.util.Set;
 
 @Entity
 @Table(name = "countries")
-public class Country extends IdBasedEntity {
+public class Country{
 
-    @Column(nullable = false, length = 45)
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
     private String name;
 
-    @Column(nullable = false, length = 5)
+
     private String code;
 
     @OneToMany(mappedBy = "country")
@@ -22,16 +21,6 @@ public class Country extends IdBasedEntity {
 
     public Country() {
 
-    }
-
-    public Country(Integer id) {
-        this.id = id;
-    }
-
-    public Country(Integer id, String name, String code) {
-        this.id = id;
-        this.name = name;
-        this.code = code;
     }
 
 
@@ -58,6 +47,14 @@ public class Country extends IdBasedEntity {
 
     public void setCode(String code) {
         this.code = code;
+    }
+
+    public Long getId() {
+        return id;
+    }
+
+    public void setId(Long id) {
+        this.id = id;
     }
 
     @Override

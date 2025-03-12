@@ -6,6 +6,7 @@ import com.halfacode.ecommMaster.mapper.CategoryMapper;
 import com.halfacode.ecommMaster.mapper.ProductMapper;
 import com.halfacode.ecommMaster.models.*;
 import com.halfacode.ecommMaster.repositories.*;
+import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -290,5 +291,13 @@ public class ProductService {
         product.setIsAvailable(totalStock > 0);
         productRepository.save(product);
     }*/
+  @Transactional
+  public void updateProductStock(Long productId) {
+      Integer totalStock = productInventoryRepository.getTotalStockForProduct(productId);
 
+      productRepository.findById(productId).ifPresent(product -> {
+          product.setStockQuantity(totalStock != null ? totalStock : 0);
+          productRepository.save(product);
+      });
+  }
 }

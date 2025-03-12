@@ -28,11 +28,14 @@ public class Order {
     @JoinColumn(name = "user_id", nullable = false)
     @JsonIgnore
     private User user;
-
+    private String paymentMethod;
     private LocalDateTime deliveryDate;
     private String trackingNumber;
     @OneToOne(mappedBy = "order", cascade = CascadeType.ALL)
     private TrackingInfo trackingInfo;
+    @ManyToOne
+    @JoinColumn(name = "shipping_address_id", nullable = false) // Ensure it exists
+    private Address shippingAddress;
     public void updateStatus(String newStatus) {
         this.status = newStatus;
     }

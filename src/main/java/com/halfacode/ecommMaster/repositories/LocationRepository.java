@@ -17,5 +17,5 @@ public interface LocationRepository extends JpaRepository<Location, Long> {
 
     Optional<Location> findByName(String locationName);
 
-    Location findNearestByCountryAndCity(Country country, String city);
+    Location findNearestByCountryAndCity(String country, String city);
 }

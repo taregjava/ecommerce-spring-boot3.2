@@ -37,10 +37,18 @@ public class OrderController {
     @PostMapping("/place")
     public ResponseEntity<?> placeOrder(@RequestBody PlaceOrderRequest request) {
         try {
+            // Validate if userId exists
+            if (request.getUserId() == null) {
+                return ResponseEntity.badRequest().body("User ID is required.");
+            }
+
             Long userId = request.getUserId();
             String discountCode = request.getDiscountCode();
+            Long addressId = request.getAddressId(); // May be null
 
             User user = userService.getUserById(userId);
+
+            // Fetch shopping cart for the user
             ShoppingCart shoppingCart = shoppingCartService.getCartByUser(user);
             List<CartItem> cartItems = shoppingCart.getItems();
 
@@ -48,16 +56,21 @@ public class OrderController {
                 return ResponseEntity.badRequest().body("Cart is empty.");
             }
 
-            OrderDTO order = orderService.placeOrder(cartItems, discountCode, user);
+            // Place the order (handling null addressId in the service)
+            OrderDTO order = orderService.placeOrder(cartItems, discountCode, user, addressId);
+
             return ResponseEntity.ok(order);
         } catch (IllegalArgumentException e) {
             return ResponseEntity.badRequest().body(e.getMessage());
         } catch (CustomPaymentException e) {
             return ResponseEntity.status(HttpStatus.PAYMENT_REQUIRED).body(e.getMessage());
         } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("An error occurred while placing the order.");
+            e.printStackTrace(); // Log the error for debugging
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Error: " + e.getMessage());
         }
     }
+
+
 
 
     // Endpoint to update the order status

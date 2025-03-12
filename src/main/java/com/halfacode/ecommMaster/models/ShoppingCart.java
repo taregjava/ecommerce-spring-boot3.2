@@ -1,6 +1,7 @@
 package com.halfacode.ecommMaster.models;
 
 import jakarta.persistence.*;
+import jakarta.transaction.Transactional;
 import lombok.Data;
 import lombok.ToString;
 
@@ -21,12 +22,17 @@ public class ShoppingCart {
 
     @OneToOne
     private User user;
+
     @ManyToOne
     @JoinColumn(name = "location_id")
     private Location location;
+
     private double shippingCost;
     private double totalPrice;
-    // Add, remove, clear items
+    private double subtotal;
+    private double tax;
+    private double discount;
+
     public void addItem(Product product, int quantity) {
         CartItem item = items.stream()
                 .filter(i -> i.getProduct().getId().equals(product.getId()))
@@ -36,50 +42,39 @@ public class ShoppingCart {
                     items.add(newItem);
                     return newItem;
                 });
+
         item.setQuantity(item.getQuantity() + quantity);
-        updateTotalPrice(); // Ensure total price updates
+        updateTotalPrice();
     }
-
-
-
-    public double getTotalPrice() {
-        double total = calculateItemsTotalPrice() + shippingCost;
-        System.out.println("Cart Total Price Calculated: " + total);
-        return total;
-    }
-
-
-
-
 
     public void removeItem(Long productId) {
         items.removeIf(item -> item.getProduct().getId().equals(productId));
+        updateTotalPrice();
     }
 
     public void clearCart() {
         items.clear();
+        updateTotalPrice();
     }
+
     public void updateTotalPrice() {
-        this.totalPrice = items.stream().mapToDouble(CartItem::getTotalPrice).sum();
-    }
-
-
-    private double calculateTotalPrice() {
-        // Calculate total price logic (including items and shipping)
-        return this.shippingCost + calculateItemsTotalPrice();  // Assuming there's a method for items' total price
-    }
-
-    private double calculateItemsTotalPrice() {
-        return items.stream()
-                .mapToDouble(CartItem::getTotalPrice)
+        double updatedSubtotal = items.stream()
+                .mapToDouble(item -> item.getProduct().getPrice() * item.getQuantity())
                 .sum();
+
+        this.subtotal = updatedSubtotal;
+        this.tax = this.subtotal * 0.1;
+        this.shippingCost = (this.shippingCost == 0) ? 20.0 : this.shippingCost; // ✅ Ensure shipping cost is set
+        this.discount = calculateDiscount();
+        this.totalPrice = this.subtotal + this.shippingCost + this.tax - this.discount;
     }
 
-   /* public double getTotalPrice() {
-        double total = items.stream()
-                .mapToDouble(CartItem::getTotalPrice)
-                .sum();
-        System.out.println("Cart Total Price: " + total);
-        return total;
-    }*/
+    public double calculateDiscount() {
+        return this.subtotal > 100 ? this.subtotal * 0.05 : 0.0; // Example: 5% discount if subtotal > 100
+    }
+
+    public double getTotalPrice() {
+        updateTotalPrice();
+        return this.totalPrice;
+    }
 }

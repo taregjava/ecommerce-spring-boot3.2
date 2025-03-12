@@ -26,13 +26,6 @@ public class ShoppingCartMapper {
             return null;
         }
 
-        // Calculate price breakdown
-        double subtotal = shoppingCart.getTotalPrice();
-        double shippingCost = calculateShipping(subtotal);
-        double tax = calculateTax(subtotal);
-        double discount = calculateDiscount(shoppingCart);
-        double totalPrice = subtotal + shippingCost + tax - discount;
-
         return ShoppingCartDTO.builder()
                 .id(shoppingCart.getId())
                 .items(shoppingCart.getItems() != null
@@ -45,12 +38,11 @@ public class ShoppingCartMapper {
                         .username(shoppingCart.getUser().getUsername())
                         .build()
                         : null)
-
-                .subtotal(subtotal)
-                .shippingCost(shippingCost)
-                .tax(tax)
-                .discount(discount)
-                .totalPrice(totalPrice)
+                .subtotal(shoppingCart.getSubtotal())
+                .shippingCost(shoppingCart.getShippingCost())
+                .tax(shoppingCart.getTax())
+                .discount(shoppingCart.getDiscount())
+                .totalPrice(shoppingCart.getTotalPrice())
                 .build();
     }
 
@@ -74,27 +66,14 @@ public class ShoppingCartMapper {
     }
 
     private double calculateShipping(double subtotal) {
-        return subtotal > 500 ? 0 : 20; // Free shipping for orders over $500
+        return subtotal > 500 ? 0 : 20;
     }
 
     private double calculateTax(double subtotal) {
-        return subtotal * 0.1; // Assume 10% tax
+        return subtotal * 0.1;
     }
-    private CartItemDTO mapCartItem(CartItem cartItem) {
-        return CartItemDTO.builder()
-                .id(cartItem.getId())
-                .product(ProductDTO.builder()
-                        .id(cartItem.getProduct().getId())
-                        .name(cartItem.getProduct().getName())
-                        .price(cartItem.getProduct().getPrice())
-                        .build()) // Only setting necessary fields
-                .quantity(cartItem.getQuantity())
-                .totalPrice(cartItem.getTotalPrice())
-                .build();
-    }
-
 
     private double calculateDiscount(ShoppingCart cart) {
-        return cart.getTotalPrice() > 1000 ? 50 : 0; // $50 discount for orders above $1000
+        return cart.getTotalPrice() > 1000 ? 50 : 0;
     }
 }

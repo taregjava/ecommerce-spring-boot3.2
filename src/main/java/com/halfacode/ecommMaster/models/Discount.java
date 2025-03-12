@@ -15,6 +15,7 @@ import java.util.Objects;
 @ToString
 @RequiredArgsConstructor
 @Entity
+@AllArgsConstructor
 public class Discount {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -29,10 +30,12 @@ public class Discount {
     public boolean isActive() {
         LocalDate now = LocalDate.now();
         if (startDate == null || endDate == null) {
-            return false; // or handle appropriately
+            return false; // Handle missing dates
         }
-        return now.isAfter(startDate) && now.isBefore(endDate);
+        return (now.isEqual(startDate) || now.isAfter(startDate)) &&
+                (now.isEqual(endDate) || now.isBefore(endDate));
     }
+
 
 
     @Override

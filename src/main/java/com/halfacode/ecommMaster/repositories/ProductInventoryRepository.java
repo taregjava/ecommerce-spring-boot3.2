@@ -27,5 +27,7 @@ public interface ProductInventoryRepository extends JpaRepository<ProductInvento
 
     @Query("SELECT pi FROM ProductInventory pi WHERE pi.product.id = :productId AND pi.location.country <> :customerCountry AND pi.stockQuantity > 0")
     Optional<ProductInventory> findInternationalStock(@Param("productId") Long productId, @Param("customerCountry") String customerCountry);
+    @Query("SELECT COALESCE(SUM(pi.stockQuantity), 0) FROM ProductInventory pi WHERE pi.product.id = :productId")
+    Integer getTotalStockForProduct(@Param("productId") Long productId);
 }
 

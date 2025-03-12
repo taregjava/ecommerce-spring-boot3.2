@@ -68,7 +68,10 @@ public class AuthenticationController {
             user.setUsername(registrationRequest.getUsername());
             user.setPassword(registrationRequest.getPassword());
             user.setAccountNonLocked(true);
-
+            String ipAddress = request.getHeader("X-Forwarded-For");
+            if (ipAddress == null || ipAddress.isEmpty()) {
+                ipAddress = request.getRemoteAddr(); // Get IP if not behind a proxy
+            }
             // Get the location based on the request IP
             GeoLocationResponse geoLocation = geoLocationService.getGeoLocationForRegistration(request);
 
@@ -78,7 +81,7 @@ public class AuthenticationController {
             location.setCity(geoLocation.getCity());
             location.setLatitude(geoLocation.getLat());
             location.setLongitude(geoLocation.getLon());
-
+            location.setIpAddress(ipAddress); // Save the IP address
             location = locationRepository.save(location);
 
             // Assign the location to the user

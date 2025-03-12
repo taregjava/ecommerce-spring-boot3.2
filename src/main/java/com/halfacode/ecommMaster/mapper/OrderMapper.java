@@ -6,6 +6,7 @@ import com.halfacode.ecommMaster.dto.AddressDTO;
 import com.halfacode.ecommMaster.dto.OrderDTO;
 import com.halfacode.ecommMaster.dto.PaymentDTO;
 import com.halfacode.ecommMaster.dto.ShippingDTO;
+import com.halfacode.ecommMaster.models.Address;
 import com.halfacode.ecommMaster.models.Order;
 import java.util.stream.Collectors;
 
@@ -44,13 +45,16 @@ public class OrderMapper {
     }
 
     private static AddressDTO getShippingAddress(Order order) {
-        // Implement logic to fetch shipping address from order
+        Address address = order.getShippingAddress();  // Use actual shipping address
+        if (address == null) return null;
+
         return AddressDTO.builder()
-                .addressLine1("123 Main St")
-                .city("New York")
-                .state("NY")
-                .postalCode("10001")
-                .country("USA")
+                .addressLine1(address.getAddressLine1())
+                .addressLine2(address.getAddressLine2())
+                .city(address.getCity())
+                .state(address.getState())
+                .postalCode(address.getPostalCode())
+                .country(address.getCountry())
                 .build();
     }
     private static AddressDTO getBillingAddress(Order order) {

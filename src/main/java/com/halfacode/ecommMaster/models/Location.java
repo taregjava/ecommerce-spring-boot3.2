@@ -24,6 +24,8 @@ public class Location {
     private String postalCode;
     private double latitude;
     private double longitude;
+
+    private String ipAddress;
     @OneToMany(mappedBy = "location")
     private List<ProductInventory> inventories;
 

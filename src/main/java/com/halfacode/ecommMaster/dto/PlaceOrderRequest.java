@@ -3,7 +3,7 @@ package com.halfacode.ecommMaster.dto;
 public class PlaceOrderRequest {
     private Long userId;
     private String discountCode;
-
+    private Long addressId;
     // Constructors
     public PlaceOrderRequest() {}
 
@@ -27,5 +27,13 @@ public class PlaceOrderRequest {
 
     public void setDiscountCode(String discountCode) {
         this.discountCode = discountCode;
+    }
+
+    public Long getAddressId() {
+        return addressId;
+    }
+
+    public void setAddressId(Long addressId) {
+        this.addressId = addressId;
     }
 }

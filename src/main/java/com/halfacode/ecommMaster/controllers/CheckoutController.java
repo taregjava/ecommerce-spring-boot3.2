@@ -58,7 +58,8 @@ public class CheckoutController {
     // Endpoint to checkout the cart
     @PostMapping("/checkout")
     public ResponseEntity<OrderDTO> checkout(@RequestHeader("Authorization") String authHeader,
-                                          @RequestParam("paymentMethod") String paymentMethod) {
+                                             @RequestParam(value = "discount_code", required = false) String discountCode,
+                                             @RequestParam(value = "payment_method", required = true) String paymentMethod) {
         User user = userService.getUserFromAuthHeader(authHeader);
         ShoppingCart cart = cartService.getCartByUser(user);
 
@@ -67,8 +68,8 @@ public class CheckoutController {
                 .mapToDouble(item -> pricingService.calculatePrice(item.getProduct(), user) * item.getQuantity())
                 .sum();
 
-        // Place order
-        OrderDTO order = orderService.placeOrder(cart.getItems(), paymentMethod, user);
+        // Place order (pass discountCode and selected payment method)
+        OrderDTO order = orderService.placeOrderCart(cart.getItems(), discountCode, paymentMethod, user);
 
         // Clear cart after successful order
         cartService.clearCart(user);
@@ -78,4 +79,6 @@ public class CheckoutController {
 
         return ResponseEntity.ok(order);
     }
+
+
 }

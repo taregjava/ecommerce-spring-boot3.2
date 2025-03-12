@@ -52,14 +52,27 @@ public class UserService {
 
         // Fetch roles
         Set<Role> roles = new HashSet<>();
-        for (Long roleId : roleIds) {
-            roleRepository.findById(roleId).ifPresentOrElse(
-                    roles::add,
-                    () -> {
-                        throw new IllegalArgumentException("Role ID " + roleId + " does not exist.");
-                    }
-            );
+
+        if (roleIds == null || roleIds.isEmpty()) {
+            Role defaultRole = roleRepository.findById(1L).orElseGet(() -> {
+                Role newRole = new Role();
+                newRole.setId(1L);
+                newRole.setName("ROLE_USER");
+                return roleRepository.save(newRole); // Save and return new role
+            });
+
+            roles.add(defaultRole);
+        } else {
+            for (Long roleId : roleIds) {
+                roleRepository.findById(roleId).ifPresentOrElse(
+                        roles::add,
+                        () -> {
+                            throw new IllegalArgumentException("Role ID " + roleId + " does not exist.");
+                        }
+                );
+            }
         }
+
         user.setRoles(roles);
 
         // Save user
