@@ -36,6 +36,8 @@ public class Order {
     @ManyToOne
     @JoinColumn(name = "shipping_address_id", nullable = false) // Ensure it exists
     private Address shippingAddress;
+    private String paymentUrl;  // ✅ Store payment URL
+    private String paymentId; // Store the payment transaction ID
     public void updateStatus(String newStatus) {
         this.status = newStatus;
     }

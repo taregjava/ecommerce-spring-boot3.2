@@ -1,13 +1,12 @@
 package com.halfacode.ecommMaster.controllers;
 
+import com.halfacode.ecommMaster.dto.PaymentResponseDTO;
+import com.halfacode.ecommMaster.services.PaymentService;
 import net.sourceforge.tess4j.ITesseract;
 import net.sourceforge.tess4j.Tesseract;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.File;
@@ -15,6 +14,13 @@ import java.io.File;
 @RestController
 @RequestMapping("/api/payments")
 public class PaymentController {
+
+
+    private final PaymentService paymentService;
+
+    public PaymentController(PaymentService paymentService) {
+        this.paymentService = paymentService;
+    }
 
     @PostMapping("/upload-receipt")
     public ResponseEntity<String> uploadReceipt(
@@ -83,7 +89,10 @@ public class PaymentController {
                 && normalizedText.contains("طارقمحمداحمدصافيبلوله");
     }*/
 
-
+    @PostMapping("/verify")
+    public ResponseEntity<String> verifyPayment(@RequestBody PaymentResponseDTO paymentResponse) {
+        return paymentService.verifyPayment(paymentResponse);
+    }
 
 
 }

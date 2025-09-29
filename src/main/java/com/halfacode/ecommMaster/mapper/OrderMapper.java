@@ -1,7 +1,5 @@
 package com.halfacode.ecommMaster.mapper;
 
-
-
 import com.halfacode.ecommMaster.dto.AddressDTO;
 import com.halfacode.ecommMaster.dto.OrderDTO;
 import com.halfacode.ecommMaster.dto.PaymentDTO;
@@ -20,11 +18,12 @@ public class OrderMapper {
         if (order == null) {
             return null;
         }
-        // Assume there are services or methods to get these details
+
         AddressDTO shippingAddress = getShippingAddress(order);
         AddressDTO billingAddress = getBillingAddress(order);
         PaymentDTO payment = getPaymentDetails(order);
         ShippingDTO shipping = getShippingDetails(order);
+
         return OrderDTO.builder()
                 .id(order.getId())
                 .orderDate(order.getOrderDate())
@@ -32,20 +31,21 @@ public class OrderMapper {
                 .status(order.getStatus())
                 .shippingAddress(shippingAddress)
                 .billingAddress(billingAddress)
-                .username(order.getUser().getUsername())  // Map username directly
+                .username(order.getUser().getUsername())
                 .items(order.getItems().stream()
-                        .map(CartItemMapper::toOrderItemDTO)  // Use new method in CartItemMapper
+                        .map(CartItemMapper::toOrderItemDTO)
                         .collect(Collectors.toList()))
                 .payment(payment)
                 .shipping(shipping)
                 .deliveryDate(order.getDeliveryDate())
                 .currency("USD")
                 .trackingNumber(order.getTrackingNumber())
+                .paymentUrl(order.getPaymentUrl())
                 .build();
     }
 
     private static AddressDTO getShippingAddress(Order order) {
-        Address address = order.getShippingAddress();  // Use actual shipping address
+        Address address = order.getShippingAddress();
         if (address == null) return null;
 
         return AddressDTO.builder()
@@ -57,22 +57,29 @@ public class OrderMapper {
                 .country(address.getCountry())
                 .build();
     }
+
     private static AddressDTO getBillingAddress(Order order) {
-        // Implement logic to fetch billing address from order
+        Address address = order.getShippingAddress();
+        if (address == null) return null;
+
         return AddressDTO.builder()
-                .addressLine1("123 Main St")
-                .city("New York")
-                .state("NY")
-                .postalCode("10001")
-                .country("USA")
+                .addressLine1(address.getAddressLine1())
+                .addressLine2(address.getAddressLine2())
+                .city(address.getCity())
+                .state(address.getState())
+                .postalCode(address.getPostalCode())
+                .country(address.getCountry())
                 .build();
     }
 
     private static PaymentDTO getPaymentDetails(Order order) {
-        // Implement logic to fetch payment details
+        if (order.getPaymentId() == null || order.getPaymentMethod() == null) {
+            return null;
+        }
+
         return PaymentDTO.builder()
-                .paymentId("111213")
-                .paymentMethod("Credit Card")
+                .paymentId(order.getPaymentId())
+                .paymentMethod(order.getPaymentMethod())
                 .paymentStatus("Paid")
                 .totalAmount(order.getTotalAmount())
                 .currency("USD")
@@ -80,11 +87,14 @@ public class OrderMapper {
     }
 
     private static ShippingDTO getShippingDetails(Order order) {
-        // Implement logic to fetch shipping details
+        if (order.getShippingAddress() == null) {
+            return null;
+        }
+
         return ShippingDTO.builder()
                 .shippingMethod("Standard")
                 .shippingCost(5.99)
-                .estimatedDelivery("2024-09-01")
+                .estimatedDelivery(order.getDeliveryDate() != null ? order.getDeliveryDate().toString() : "Unknown")
                 .build();
     }
 }

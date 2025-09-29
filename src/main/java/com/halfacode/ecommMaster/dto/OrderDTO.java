@@ -21,4 +21,6 @@ public class OrderDTO {
     private ShippingDTO shipping;
     private String currency;
     private String trackingNumber;
+    private String paymentUrl;  // ✅ Store payment URL
+
 }

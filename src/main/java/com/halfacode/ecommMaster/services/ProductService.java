@@ -255,7 +255,7 @@ public class ProductService {
         int stockPerLocation = totalStock / locations.size();
 
         for (Location location : locations) {
-            ProductInventory inventory = ProductInventory.builder()
+            var inventory = ProductInventory.builder()
                     .product(product)
                     .location(location)
                     .stockQuantity(stockPerLocation)

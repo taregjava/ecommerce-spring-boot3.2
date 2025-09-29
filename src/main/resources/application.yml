@@ -1,36 +1,46 @@
+server:
+  port: 8080
+  address: 0.0.0.0  # Bind to all network interfaces so it's accessible externally
+
 spring:
   profiles:
     active: private
-  cache:
-    type: none
+
   datasource:
-    url: jdbc:mysql://localhost:3306/ecommerce-sh
+    url: jdbc:mysql://146.190.72.200:3306/ecommerce-sh
     username: root
-    password:
+    password: 0912658511
     driver-class-name: com.mysql.cj.jdbc.Driver
-    #username: root
-   # password: 0912658511Ts@
     hikari:
       max-lifetime: 1800000         # 30 minutes
       idle-timeout: 300000          # 5 minutes
       connection-test-query: SELECT 1
-      maximum-pool-size: 10         # Adjust pool size based on your needs
+      maximum-pool-size: 10
+
   jpa:
     hibernate:
       ddl-auto: update
-      properties:
-        hibernate.dialect: org.hibernate.dialect.MySQL8Dialect
+    database-platform: org.hibernate.dialect.MySQL8Dialect
     show-sql: true
+
+  cache:
+    type: none
+
   h2:
     console:
       enabled: false  # Disable H2 console if you're not using H2 anymore
 
+logging:
+  level:
+    org.hibernate.SQL: DEBUG
+    org.hibernate.type.descriptor.sql.BasicBinder: TRACE
+
 springdoc:
   api-docs:
-    enabled: true  # Enable OpenAPI documentation generation
+    enabled: true
   swagger-ui:
-    enabled: true  # Enable Swagger UI
-    path: /swagger-ui.html  # Path to Swagger UI
+    enabled: true
+    path: /swagger-ui.html  # Optional, only if you want it at /swagger-ui.html
 
 cloudinary:
-  cloud_name: dfpsqiiee  # Keep only cloud_name here
+  cloud_name: dfpsqiiee

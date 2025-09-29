@@ -35,8 +35,73 @@ public class OrderService {
         this.shoppingCartService = shoppingCartService;
         this.addressRepository = addressRepository;
     }
-
     @Transactional
+    public OrderDTO placeOrder(List<CartItem> cartItems, String discountCode, User user, Long addressId) {
+        Address shippingAddress = (addressId != null)
+                ? addressRepository.findById(addressId).orElse(null)
+                : addressRepository.findByUserAndDefaultAddressTrue(user);
+
+        if (shippingAddress == null) {
+            throw new RuntimeException("Shipping address is required");
+        }
+
+        double discountPercentage = 0;
+        if (discountCode != null && !discountCode.isEmpty()) {
+            Discount discount = discountService.getDiscountByCode(discountCode);
+            if (discount != null && discount.isActive()) {
+                discountPercentage = discount.getPercentage();
+            } else {
+                throw new IllegalArgumentException("Invalid or expired discount code");
+            }
+        }
+
+        double totalAmount = cartItems.stream()
+                .mapToDouble(CartItem::getTotalPrice)
+                .sum();
+        double discountedAmount = totalAmount * (1 - discountPercentage / 100);
+
+        boolean paymentSuccessful = paymentService.processPayment(user, discountedAmount, "CREDIT_CARD");
+        if (!paymentSuccessful) {
+            throw new CustomPaymentException("Payment failed for user: " + user.getUsername());
+        }
+
+        for (CartItem item : cartItems) {
+            productService.updateStock(item.getProduct().getId(), item.getQuantity());
+        }
+
+        // Step 1: Create the order with "PENDING_PAYMENT" status
+        Order order = new Order();
+        List<CartItem> orderItems = new ArrayList<>();
+        for (CartItem item : cartItems) {
+            CartItem newItem = new CartItem(item.getProduct(), item.getQuantity());
+            newItem.setTotalPrice(item.getTotalPrice());
+            newItem.setOrder(order);
+            orderItems.add(newItem);
+        }
+        order.setItems(orderItems);
+        order.setOrderDate(LocalDateTime.now());
+        order.setTotalAmount(discountedAmount);
+        order.setUser(user);
+        order.setShippingAddress(shippingAddress);
+        order.setStatus("PENDING_PAYMENT");
+        order.setTrackingNumber(UUID.randomUUID().toString());
+        order.setDeliveryDate(LocalDateTime.now().plusDays(5));
+        order.setPaymentId(null);  // Payment ID will be updated after payment
+        Order savedOrder = orderRepository.saveAndFlush(order);
+
+        // Step 2: Generate and set the payment URL
+        String paymentUrl = generatePaymentUrl(savedOrder.getId());
+        savedOrder.setPaymentUrl(paymentUrl);
+        orderRepository.save(savedOrder); // Persist the updated order with payment URL
+
+        // Step 3: Return OrderDTO with Payment URL
+        OrderDTO orderDTO = OrderMapper.toDTO(savedOrder);
+        orderDTO.setPaymentUrl(paymentUrl);
+
+        return orderDTO;
+    }
+
+ /*   @Transactional
     public OrderDTO placeOrder(List<CartItem> cartItems, String discountCode, User user, Long addressId) {
         // If addressId is null, use the default address of the user
         Address shippingAddress = (addressId != null)
@@ -73,21 +138,34 @@ public class OrderService {
 
         Order order = new Order();
         order.setOrderDate(LocalDateTime.now());
-        order.setItems(new ArrayList<>(cartItems));
+        List<CartItem> orderItems = new ArrayList<>();
+        for (CartItem item : cartItems) {
+            CartItem newItem = new CartItem(item.getProduct(), item.getQuantity());
+            newItem.setTotalPrice(item.getTotalPrice());
+            newItem.setOrder(order);
+            orderItems.add(newItem);
+        }
+        order.setItems(orderItems);
+
+
         order.setTotalAmount(discountedAmount);
         order.setUser(user);
         order.setShippingAddress(shippingAddress);
-        order.setStatus("Pending");
+        order.setStatus("PENDING_PAYMENT");
+
         order.setTrackingNumber(UUID.randomUUID().toString());
         order.setDeliveryDate(LocalDateTime.now().plusDays(5));
 
-        Order savedOrder = orderRepository.save(order);
+        Order savedOrder = orderRepository.saveAndFlush(order);
 
         shoppingCartService.clearCart(user);
+ // Step 2: Generate a payment URL (Simulated)
+        String paymentUrl = "https://payments.gateway.com/pay?orderId=" + savedOrder.getId();
 
-        return OrderMapper.toDTO(savedOrder);
-    }
-
+        OrderDTO orderDTO = OrderMapper.toDTO(savedOrder);
+        orderDTO.setPaymentUrl(paymentUrl);
+        return orderDTO;
+    }*/
 
     @Transactional
     public OrderDTO placeOrderCart(List<CartItem> cartItems, String discountCode, String paymentMethod, User user) {
@@ -137,7 +215,7 @@ public class OrderService {
             order.setTrackingNumber(UUID.randomUUID().toString()); // Generate tracking number
             order.setDeliveryDate(LocalDateTime.now().plusDays(5)); // Example delivery date
 
-            Order savedOrder = orderRepository.save(order);
+            Order savedOrder = orderRepository.saveAndFlush(order);
 
 
             System.out.println("Saved Order ID: " + savedOrder.getId());
@@ -162,7 +240,9 @@ public class OrderService {
 
 
 
-
+    private String generatePaymentUrl(Long orderId) {
+        return "https://payments.gateway.com/pay?orderId=" + orderId;
+    }
     public Order updateOrderStatus(Long orderId, String status) {
         Order order = orderRepository.findById(orderId)
                 .orElseThrow(() -> new IllegalArgumentException("Order not found"));
